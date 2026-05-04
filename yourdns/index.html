@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNS Checker — Professional DNS Analysis Tool</title>
+<style>
+/* ══════════════════════════════════════════
+   CSS VARIABLES & RESET
+══════════════════════════════════════════ */
+:root {
+  --bg-primary:    #0d1117;
+  --bg-secondary:  #161b22;
+  --bg-card:       #1c2128;
+  --bg-hover:      #21262d;
+  --border:        #30363d;
+  --border-subtle: #21262d;
+
+  --text-primary:  #e6edf3;
+  --text-secondary:#8b949e;
+  --text-muted:    #6e7681;
+
+  --accent-blue:   #58a6ff;
+  --accent-purple: #a5d6ff;
+
+  --pass-bg:       #0d2a1e;
+  --pass-border:   #238636;
+  --pass-text:     #3fb950;
+  --pass-badge:    #1a7f37;
+
+  --fail-bg:       #2d1316;
+  --fail-border:   #da3633;
+  --fail-text:     #f85149;
+  --fail-badge:    #b91c1c;
+
+  --warn-bg:       #2b2006;
+  --warn-border:   #9e6a03;
+  --warn-text:     #d29922;
+  --warn-badge:    #9a6700;
+
+  --info-bg:       #051d4d;
+  --info-border:   #1f6feb;
+  --info-text:     #58a6ff;
+  --info-badge:    #1d4ed8;
+
+  --section-parent: #7c3aed;
+  --section-ns:     #0284c7;
+  --section-soa:    #0891b2;
+  --section-mx:     #059669;
+  --section-www:    #d97706;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ══════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════ */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+.site-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--section-parent));
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+  color: white;
+}
+
+.logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.logo-text span { color: var(--accent-blue); }
+
+/* Inline search (shown on results page) */
+.header-search { display: none; }
+.header-search.visible { display: flex; gap: 8px; align-items: center; }
+
+.header-search input {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 7px 12px;
+  width: 260px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.header-search input:focus { border-color: var(--accent-blue); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent-blue);
+  color: #0d1117;
+}
+.btn-primary:hover { background: #79c0ff; transform: translateY(-1px); }
+
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ══════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════ */
+#page-landing {
+  padding: 80px 0 60px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(88,166,255,0.1);
+  border: 1px solid rgba(88,166,255,0.3);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 12px; font-weight: 600;
+  color: var(--accent-blue);
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto 40px;
+}
+
+/* Search Form */
+.search-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-md);
+}
+
+.search-label {
+  display: block;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+
+.search-row {
+  display: flex;
+  gap: 10px;
+}
+
+.search-input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 15px;
+  padding: 11px 16px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: var(--font-mono);
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(88,166,255,0.15);
+}
+
+.search-btn {
+  background: var(--accent-blue);
+  color: #0d1117;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 11px 24px;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.search-btn:hover { background: #79c0ff; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.search-btn:active { transform: translateY(0); }
+.search-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.search-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Features Grid */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.feature-card:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+
+.feature-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.feature-title {
+  font-size: 13px; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.feature-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════
+   RESULTS PAGE
+══════════════════════════════════════════ */
+#page-results { display: none; padding: 24px 0 60px; }
+
+.results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.results-domain {
+  font-size: 22px; font-weight: 700;
+  color: var(--text-primary);
+}
+.results-domain span {
+  color: var(--accent-blue);
+  font-family: var(--font-mono);
+}
+
+.results-meta {
+  font-size: 12px; color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Progress */
+.progress-wrap {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.progress-top {
+  display: flex; justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.progress-label {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+}
+
+.progress-pct {
+  font-size: 12px; font-weight: 700;
+  color: var(--accent-blue);
+  font-family: var(--font-mono);
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--section-parent));
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.progress-steps {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+
+.step-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.step-pill.active {
+  background: rgba(88,166,255,0.15);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.step-pill.done {
+  background: var(--pass-bg);
+  border-color: var(--pass-border);
+  color: var(--pass-text);
+}
+
+.step-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.step-pill.active .step-dot {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Summary Bar */
+.summary-bar {
+  display: flex; gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  flex: 1; min-width: 100px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.2s;
+}
+
+.summary-card.s-pass  { border-top: 3px solid var(--pass-text); }
+.summary-card.s-fail  { border-top: 3px solid var(--fail-text); }
+.summary-card.s-warn  { border-top: 3px solid var(--warn-text); }
+.summary-card.s-info  { border-top: 3px solid var(--info-text); }
+
+.summary-num {
+  font-size: 28px; font-weight: 800; font-family: var(--font-mono);
+  line-height: 1;
+}
+.s-pass .summary-num { color: var(--pass-text); }
+.s-fail .summary-num { color: var(--fail-text); }
+.s-warn .summary-num { color: var(--warn-text); }
+.s-info .summary-num { color: var(--info-text); }
+
+.summary-lbl {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Filter Tabs */
+.tabs {
+  display: flex; gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.tab-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+.tab-btn.active {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #0d1117;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin-top: 24px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.section-header:hover { background: var(--bg-hover); }
+
+.section-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.section-header[data-section="parent"] .section-dot { background: var(--section-parent); }
+.section-header[data-section="ns"]     .section-dot { background: var(--section-ns); }
+.section-header[data-section="soa"]    .section-dot { background: var(--section-soa); }
+.section-header[data-section="mx"]     .section-dot { background: var(--section-mx); }
+.section-header[data-section="www"]    .section-dot { background: var(--section-www); }
+
+.section-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.section-stats {
+  display: flex; gap: 6px;
+}
+
+.stat-chip {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px; font-weight: 700;
+  font-family: var(--font-mono);
+}
+.stat-chip.cp { background: var(--pass-bg); color: var(--pass-text); }
+.stat-chip.cf { background: var(--fail-bg); color: var(--fail-text); }
+.stat-chip.cw { background: var(--warn-bg); color: var(--warn-text); }
+.stat-chip.ci { background: var(--info-bg); color: var(--info-text); }
+
+.section-chevron {
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  font-size: 12px;
+}
+.section-header.collapsed .section-chevron { transform: rotate(-90deg); }
+
+/* Results Table */
+.section-table-wrap {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: hidden;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table thead tr {
+  background: var(--bg-card);
+}
+
+.results-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.results-table td {
+  padding: 12px 14px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.results-table tr:last-child td { border-bottom: none; }
+
+.results-table tr.row-pass { background: var(--pass-bg); }
+.results-table tr.row-fail { background: var(--fail-bg); }
+.results-table tr.row-warn { background: var(--warn-bg); }
+.results-table tr.row-info { background: var(--info-bg); }
+
+.results-table tr:hover { filter: brightness(1.1); }
+
+/* Badge */
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  font-size: 12px; font-weight: 800;
+  line-height: 1;
+}
+.badge-pass { background: var(--pass-badge); color: #fff; }
+.badge-fail { background: var(--fail-badge); color: #fff; }
+.badge-warn { background: var(--warn-badge); color: #fff; }
+.badge-info { background: var(--info-badge); color: #fff; }
+
+/* Test name */
+.test-name {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* Info cell */
+.info-cell {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  line-height: 1.55;
+}
+
+.info-cell strong { color: var(--accent-blue); font-weight: 700; }
+
+/* Section label pill */
+.sec-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: #fff;
+}
+.sec-pill-parent { background: var(--section-parent); }
+.sec-pill-ns     { background: var(--section-ns); }
+.sec-pill-soa    { background: var(--section-soa); }
+.sec-pill-mx     { background: var(--section-mx); }
+.sec-pill-www    { background: var(--section-www); }
+
+/* Skeleton / loading rows */
+.skeleton-row td {
+  padding: 14px;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg-hover) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Error */
+.error-box {
+  background: var(--fail-bg);
+  border: 1px solid var(--fail-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  color: var(--fail-text);
+  font-size: 13px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .summary-bar { gap: 8px; }
+  .summary-card { min-width: 80px; padding: 10px 12px; }
+  .summary-num { font-size: 22px; }
+  .results-table th:nth-child(3),
+  .results-table td:nth-child(3) { display: none; }
+  .search-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="#" id="logoLink">
+      <div class="logo-icon">D</div>
+      <span class="logo-text">DNS<span>Probe</span></span>
+    </a>
+
+    <!-- Shown only on results page -->
+    <div class="header-search" id="headerSearch">
+      <input type="text" id="headerDomainInput"
+             placeholder="example.com" spellcheck="false" autocomplete="off">
+      <button class="btn btn-primary btn-sm" id="headerAnalyzeBtn">Analyze</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     LANDING PAGE
+══════════════════════════════════════ -->
+<main id="page-landing">
+  <div class="container">
+
+    <section class="hero">
+      <div class="hero-badge">
+        ⚡ Real-time DNS Analysis
+      </div>
+      <h1>Professional DNS<br>Health Checker</h1>
+      <p>
+        Comprehensive DNS analysis like IntoDNS — checks NS records, SOA configuration,
+        MX routing, glue records, and more with real-time streaming results.
+      </p>
+
+      <div class="search-box">
+        <label class="search-label" for="domainInput">Enter Domain Name</label>
+        <div class="search-row">
+          <input
+            type="text"
+            id="domainInput"
+            class="search-input"
+            placeholder="example.com"
+            spellcheck="false"
+            autocomplete="off"
+          >
+          <button class="search-btn" id="analyzeBtn">
+            Analyze DNS →
+          </button>
+        </div>
+        <p class="search-hint">
+          Results stream in real-time — first data appears in under 1 second
+        </p>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feature-card">
+        <span class="feature-icon">🌐</span>
+        <div class="feature-title">Parent NS Analysis</div>
+        <div class="feature-desc">Verify glue records, NS delegation, and parent-zone consistency.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔍</span>
+        <div class="feature-title">Deep NS Checks</div>
+        <div class="feature-desc">UDP/TCP probes, ASN diversity, subnet distribution, CNAME guards.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📋</span>
+        <div class="feature-title">SOA Validation</div>
+        <div class="feature-desc">RFC-compliant range checks for refresh, retry, expire and TTL values.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📧</span>
+        <div class="feature-title">MX Record Audit</div>
+        <div class="feature-desc">PTR lookup, CNAME guards, IP public check, and priority analysis.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🌍</span>
+        <div class="feature-title">WWW Resolution</div>
+        <div class="feature-desc">Verify A records and CNAME chains for www and apex domain.</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════
+     RESULTS PAGE
+══════════════════════════════════════ -->
+<section id="page-results">
+  <div class="container">
+
+    <!-- Results header -->
+    <div class="results-header">
+      <div>
+        <div class="results-domain">Analysis for <span id="displayDomain">—</span></div>
+        <div class="results-meta" id="resultsMeta">Initializing…</div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="newAnalysisBtn">← New Analysis</button>
+    </div>
+
+    <!-- Error box (hidden by default) -->
+    <div class="error-box" id="errorBox" style="display:none;">
+      <span>⚠</span>
+      <span id="errorMsg"></span>
+    </div>
+
+    <!-- Progress indicator -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-top">
+        <span class="progress-label" id="progressLabel">Connecting…</span>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-steps">
+        <div class="step-pill" id="step-parent"><span class="step-dot"></span> Parent</div>
+        <div class="step-pill" id="step-soa"><span class="step-dot"></span> SOA</div>
+        <div class="step-pill" id="step-ns"><span class="step-dot"></span> NS</div>
+        <div class="step-pill" id="step-mx"><span class="step-dot"></span> MX</div>
+        <div class="step-pill" id="step-www"><span class="step-dot"></span> WWW</div>
+      </div>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="summary-bar">
+      <div class="summary-card s-pass">
+        <div>
+          <div class="summary-num" id="cnt-pass">0</div>
+          <div class="summary-lbl">Passed</div>
+        </div>
+      </div>
+      <div class="summary-card s-fail">
+        <div>
+          <div class="summary-num" id="cnt-fail">0</div>
+          <div class="summary-lbl">Failed</div>
+        </div>
+      </div>
+      <div class="summary-card s-warn">
+        <div>
+          <div class="summary-num" id="cnt-warn">0</div>
+          <div class="summary-lbl">Warnings</div>
+        </div>
+      </div>
+      <div class="summary-card s-info">
+        <div>
+          <div class="summary-num" id="cnt-info">0</div>
+          <div class="summary-lbl">Info</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="tabs" id="filterTabs">
+      <button class="tab-btn active" data-filter="all">All Checks</button>
+      <button class="tab-btn" data-filter="parent">Parent</button>
+      <button class="tab-btn" data-filter="ns">NS</button>
+      <button class="tab-btn" data-filter="soa">SOA</button>
+      <button class="tab-btn" data-filter="mx">MX</button>
+      <button class="tab-btn" data-filter="www">WWW</button>
+    </div>
+
+    <!-- Results container (sections injected here) -->
+    <div id="resultsContainer"></div>
+
+  </div>
+</section>
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+const SECTIONS   = ['parent', 'soa', 'ns', 'mx', 'www'];
+const SECTION_STEPS = { parent: 20, soa: 40, ns: 65, mx: 85, www: 100 };
+const LABELS = {
+  parent: 'Parent Nameservers',
+  ns:     'Nameserver Records',
+  soa:    'SOA Configuration',
+  mx:     'Mail Exchange (MX)',
+  www:    'Web Resolution (WWW)',
+};
+
+let state = {
+  counts: { pass: 0, fail: 0, warn: 0, info: 0 },
+  activeFilter: 'all',
+  currentES: null,
+  currentDomain: '',
+};
+
+// ══════════════════════════════════════════
+// DOM REFS
+// ══════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+const pageLanding  = $('page-landing');
+const pageResults  = $('page-results');
+const domainInput  = $('domainInput');
+const analyzeBtn   = $('analyzeBtn');
+const headerSearch = $('headerSearch');
+const headerInput  = $('headerDomainInput');
+const headerBtn    = $('headerAnalyzeBtn');
+const resultsContainer = $('resultsContainer');
+const progressWrap = $('progressWrap');
+const errorBox     = $('errorBox');
+
+// ══════════════════════════════════════════
+// PAGE NAVIGATION
+// ══════════════════════════════════════════
+function showLanding() {
+  pageLanding.style.display = '';
+  pageResults.style.display = 'none';
+  headerSearch.classList.remove('visible');
+  domainInput.focus();
+}
+
+function showResults(domain) {
+  pageLanding.style.display = 'none';
+  pageResults.style.display = '';
+  headerSearch.classList.add('visible');
+  $('displayDomain').textContent = domain;
+  $('resultsMeta').textContent   = 'Streaming analysis…';
+  headerInput.value = domain;
+  window.scrollTo(0, 0);
+}
+
+$('logoLink').addEventListener('click', e => {
+  e.preventDefault();
+  if (state.currentES) { state.currentES.close(); state.currentES = null; }
+  showLanding();
+});
+
+$('newAnalysisBtn').addEventListener('click', () => {
+  if (state.currentES) { state.currentES.close(); state.currentES = null; }
+  showLanding();
+});
+
+// ══════════════════════════════════════════
+// VALIDATION
+// ══════════════════════════════════════════
+function validateDomain(raw) {
+  let d = raw.trim().toLowerCase();
+  d = d.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
+  if (!d) return null;
+  const re = /^([a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
+  return re.test(d) ? d : null;
+}
+
+// ══════════════════════════════════════════
+// RESET / INIT RESULTS VIEW
+// ══════════════════════════════════════════
+function resetResults() {
+  state.counts = { pass: 0, fail: 0, warn: 0, info: 0 };
+  state.activeFilter = 'all';
+
+  // Reset summary
+  ['pass','fail','warn','info'].forEach(s => $(`cnt-${s}`).textContent = '0');
+
+  // Reset progress
+  progressWrap.style.display = '';
+  $('progressLabel').textContent = 'Starting analysis…';
+  $('progressPct').textContent   = '0%';
+  $('progressFill').style.width  = '0%';
+  SECTIONS.forEach(s => {
+    const el = $(`step-${s}`);
+    el.className = 'step-pill';
+  });
+
+  // Clear results
+  resultsContainer.innerHTML = '';
+  errorBox.style.display = 'none';
+
+  // Reset tabs
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === 'all');
+  });
+}
+
+// ══════════════════════════════════════════
+// START ANALYSIS
+// ══════════════════════════════════════════
+function startAnalysis(rawInput) {
+  const domain = validateDomain(rawInput);
+  if (!domain) {
+    alert('Please enter a valid domain name (e.g., example.com)');
+    return;
+  }
+
+  if (state.currentES) { state.currentES.close(); state.currentES = null; }
+
+  state.currentDomain = domain;
+  showResults(domain);
+  resetResults();
+  setActiveSection('parent'); // First section to be active
+
+  // ── Open SSE stream ──
+  const url = `dns_checker.php?stream=1&domain=${encodeURIComponent(domain)}`;
+  const es  = new EventSource(url);
+  state.currentES = es;
+
+  // ── start event ──
+  es.addEventListener('start', () => {
+    $('progressLabel').textContent = 'Analyzing Parent NS records…';
+    $('progressPct').textContent   = '5%';
+    $('progressFill').style.width  = '5%';
+  });
+
+  // ── section event ──
+  es.addEventListener('section', e => {
+    const payload = JSON.parse(e.data);
+    renderSection(payload.section, payload.items);
+    markStepDone(payload.section);
+    updateProgress(payload.section);
+  });
+
+  // ── done event ──
+  es.addEventListener('done', e => {
+    const payload = JSON.parse(e.data);
+    $('progressFill').style.width = '100%';
+    $('progressPct').textContent  = '100%';
+    $('progressLabel').textContent = `Analysis complete in ${payload.time}s`;
+    $('resultsMeta').textContent = `Completed in ${payload.time}s · ${
+      state.counts.pass + state.counts.fail + state.counts.warn + state.counts.info
+    } checks performed`;
+
+    // Hide progress bar after brief delay
+    setTimeout(() => { progressWrap.style.display = 'none'; }, 1500);
+    es.close();
+    state.currentES = null;
+  });
+
+  // ── error ──
+  es.addEventListener('error', () => {
+    if (es.readyState === EventSource.CLOSED) return;
+    es.close();
+    state.currentES = null;
+    showError('Connection lost. Please try again.');
+  });
+}
+
+// ══════════════════════════════════════════
+// PROGRESS HELPERS
+// ══════════════════════════════════════════
+const NEXT_ACTIVE = {
+  parent: 'soa',
+  soa:    'ns',
+  ns:     'mx',
+  mx:     'www',
+  www:    null,
+};
+
+function setActiveSection(section) {
+  const el = $(`step-${section}`);
+  if (el) el.className = 'step-pill active';
+}
+
+function markStepDone(section) {
+  const el = $(`step-${section}`);
+  if (el) el.className = 'step-pill done';
+
+  const next = NEXT_ACTIVE[section];
+  if (next) {
+    setActiveSection(next);
+    const labels = {
+      soa: 'Checking SOA record…',
+      ns:  'Probing nameserver connectivity…',
+      mx:  'Resolving MX records…',
+      www: 'Checking web resolution…',
+    };
+    if (labels[next]) $('progressLabel').textContent = labels[next];
+  }
+}
+
+function updateProgress(section) {
+  const pct = SECTION_STEPS[section] || 0;
+  $('progressFill').style.width = pct + '%';
+  $('progressPct').textContent  = pct + '%';
+}
+
+// ══════════════════════════════════════════
+// RENDER SECTION
+// ══════════════════════════════════════════
+function renderSection(section, items) {
+  // Count stats
+  const counts = { pass: 0, fail: 0, warn: 0, info: 0 };
+  items.forEach(item => {
+    if (counts[item.status] !== undefined) {
+      counts[item.status]++;
+      state.counts[item.status]++;
+    }
+  });
+
+  // Update global summary counters
+  ['pass','fail','warn','info'].forEach(s => {
+    $(`cnt-${s}`).textContent = state.counts[s];
+  });
+
+  // Build section HTML
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'result-section';
+  sectionDiv.dataset.section = section;
+  sectionDiv.style.display = (
+    state.activeFilter === 'all' || state.activeFilter === section
+  ) ? '' : 'none';
+
+  // Stat chips (only non-zero)
+  let chipsHtml = '';
+  if (counts.pass) chipsHtml += `<span class="stat-chip cp">${counts.pass} pass</span>`;
+  if (counts.fail) chipsHtml += `<span class="stat-chip cf">${counts.fail} fail</span>`;
+  if (counts.warn) chipsHtml += `<span class="stat-chip cw">${counts.warn} warn</span>`;
+  if (counts.info) chipsHtml += `<span class="stat-chip ci">${counts.info} info</span>`;
+
+  // Table rows
+  let rowsHtml = '';
+  items.forEach(item => {
+    const rowClass  = rowClass_(item.status);
+    const iconHtml  = statusIcon_(item.status);
+    const infoSafe  = escapeHtml(item.info).replace(/\n/g, '<br>');
+    // Re-allow the one known safe tag from PHP
+    const infoFinal = infoSafe.replace(/&lt;strong&gt;(.*?)&lt;\/strong&gt;/g,
+                                       '<strong>$1</strong>');
+
+    rowsHtml += `
+      <tr class="${rowClass}">
+        <td style="width:36px; text-align:center;">${iconHtml}</td>
+        <td style="width:200px;">
+          <span class="test-name">${escapeHtml(item.test)}</span>
+        </td>
+        <td><div class="info-cell">${infoFinal}</div></td>
+      </tr>`;
+  });
+
+  sectionDiv.innerHTML = `
+    <div class="section-header" data-section="${section}">
+      <span class="section-dot"></span>
+      <span class="section-title">${LABELS[section] || section.toUpperCase()}</span>
+      <div class="section-stats">${chipsHtml}</div>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-table-wrap">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Check</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>`;
+
+  // Collapsible header
+  sectionDiv.querySelector('.section-header').addEventListener('click', function() {
+    this.classList.toggle('collapsed');
+    const wrap = this.nextElementSibling;
+    wrap.style.display = this.classList.contains('collapsed') ? 'none' : '';
+  });
+
+  resultsContainer.appendChild(sectionDiv);
+}
+
+// ══════════════════════════════════════════
+// FILTER TABS
+// ══════════════════════════════════════════
+document.getElementById('filterTabs').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+
+  const filter = btn.dataset.filter;
+  state.activeFilter = filter;
+
+  document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('active', b === btn)
+  );
+
+  document.querySelectorAll('.result-section').forEach(sec => {
+    sec.style.display =
+      (filter === 'all' || sec.dataset.section === filter) ? '' : 'none';
+  });
+});
+
+// ══════════════════════════════════════════
+// BUTTON HANDLERS
+// ══════════════════════════════════════════
+analyzeBtn.addEventListener('click', () => {
+  startAnalysis(domainInput.value);
+});
+
+domainInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') startAnalysis(domainInput.value);
+});
+
+headerBtn.addEventListener('click', () => {
+  startAnalysis(headerInput.value);
+});
+
+headerInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') startAnalysis(headerInput.value);
+});
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function statusIcon_(status) {
+  const map = {
+    pass: '<span class="badge badge-pass">✓</span>',
+    fail: '<span class="badge badge-fail">✗</span>',
+    warn: '<span class="badge badge-warn">!</span>',
+    info: '<span class="badge badge-info">i</span>',
+  };
+  return map[status] || map.info;
+}
+
+function rowClass_(status) {
+  const map = { pass: 'row-pass', fail: 'row-fail', warn: 'row-warn', info: 'row-info' };
+  return map[status] || 'row-info';
+}
+
+function showError(msg) {
+  $('errorMsg').textContent = msg;
+  errorBox.style.display = 'flex';
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+showLanding();
+</script>
+</body>
+</html>
