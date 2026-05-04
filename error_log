@@ -1,0 +1,27 @@
+[12-Apr-2026 14:15:20 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 929
+[12-Apr-2026 14:18:21 Asia/Tehran] PHP Parse error:  syntax error, unexpected variable "$cnameRecords", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 587
+[12-Apr-2026 14:18:45 Asia/Tehran] PHP Parse error:  Unmatched '}' in /home3/mzttcfai/public_html/ssl/zydns.php on line 674
+[12-Apr-2026 14:19:56 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 882
+[12-Apr-2026 14:21:03 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 940
+[12-Apr-2026 14:21:05 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 940
+[12-Apr-2026 14:21:09 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 940
+[12-Apr-2026 14:22:18 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 940
+[12-Apr-2026 14:22:57 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 853
+[12-Apr-2026 14:23:00 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 853
+[12-Apr-2026 14:27:08 Asia/Tehran] PHP Parse error:  syntax error, unexpected variable "$domain", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 1092
+[12-Apr-2026 14:29:14 Asia/Tehran] PHP Parse error:  syntax error, unexpected variable "$domain", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 1100
+[13-Apr-2026 00:52:10 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home3/mzttcfai/public_html/ssl/zydns.php on line 1391
+[13-Apr-2026 00:52:43 Asia/Tehran] PHP Fatal error:  Cannot redeclare DNSChecker::getARecord() in /home3/mzttcfai/public_html/ssl/zydns.php on line 1245
+[13-Apr-2026 00:57:46 Asia/Tehran] PHP Fatal error:  Cannot redeclare DNSChecker::getPTR() in /home3/mzttcfai/public_html/ssl/zydns.php on line 1245
+[13-Apr-2026 00:57:48 Asia/Tehran] PHP Fatal error:  Cannot redeclare DNSChecker::getPTR() in /home3/mzttcfai/public_html/ssl/zydns.php on line 1245
+[13-Apr-2026 00:57:50 Asia/Tehran] PHP Fatal error:  Cannot redeclare DNSChecker::getPTR() in /home3/mzttcfai/public_html/ssl/zydns.php on line 1245
+[13-Apr-2026 00:57:51 Asia/Tehran] PHP Fatal error:  Cannot redeclare DNSChecker::getPTR() in /home3/mzttcfai/public_html/ssl/zydns.php on line 1245
+[13-Apr-2026 00:57:51 Asia/Tehran] PHP Fatal error:  Cannot redeclare DNSChecker::getPTR() in /home3/mzttcfai/public_html/ssl/zydns.php on line 1245
+[13-Apr-2026 00:57:52 Asia/Tehran] PHP Fatal error:  Cannot redeclare DNSChecker::getPTR() in /home3/mzttcfai/public_html/ssl/zydns.php on line 1245
+[13-Apr-2026 01:04:32 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "<", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 1475
+[13-Apr-2026 01:04:46 Asia/Tehran] PHP Parse error:  syntax error, unexpected token ";", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 1474
+[13-Apr-2026 01:04:49 Asia/Tehran] PHP Parse error:  syntax error, unexpected token ";", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 1474
+[13-Apr-2026 01:12:40 Asia/Tehran] PHP Parse error:  syntax error, unexpected token ";", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 1474
+[13-Apr-2026 01:22:32 Asia/Tehran] PHP Parse error:  syntax error, unexpected variable "$nsCount", expecting "function" or "const" in /home3/mzttcfai/public_html/ssl/zydns.php on line 528
+[13-Apr-2026 01:41:41 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "private" in /home3/mzttcfai/public_html/ssl/zydns.php on line 639
+[13-Apr-2026 01:43:01 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home3/mzttcfai/public_html/ssl/zydns.php on line 878
