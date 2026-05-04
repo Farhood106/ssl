@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
-
-session_start();
+require_once __DIR__ . '/bootstrap.php';
 
 // تاریخ بروزرسانی: 1405/01/23
 
@@ -37,6 +36,11 @@ $activeTab = $_POST['active_tab'] ?? 'text_to_file';
 $extractedData = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        Csrf::verifyOrFail((bool)app_config('SECURITY_CSRF_ENABLED', true));
+    } catch (Throwable $e) {
+        $error = 'درخواست نامعتبر است.';
+    }
     $action = $_POST['action'] ?? '';
     $activeTab = $_POST['active_tab'] ?? 'text_to_file';
 
@@ -92,9 +96,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ── بخش استخراج از ZIP ──
     if ($action === 'extract_zip') {
         if (isset($_FILES['zip_file']) && $_FILES['zip_file']['error'] === UPLOAD_ERR_OK) {
+            if ((bool)app_config('SECURITY_UPLOAD_LIMITS_ENABLED', true)) {
+                UploadGuard::assertUploadOk($_FILES['zip_file'], (int)app_config('UPLOAD_MAX_ZIP_BYTES', 10 * 1024 * 1024));
+            }
             $zipPath = $_FILES['zip_file']['tmp_name'];
             $zip = new ZipArchive();
             
+            if ((bool)app_config('SECURITY_ZIP_LIMITS_ENABLED', true)) {
+                ZipGuard::assertZipSafe($zipPath, ZipGuard::defaultLimits());
+            }
+
             if ($zip->open($zipPath) === true) {
                 $extCert = ''; $extKey = ''; $extCa = '';
                 
@@ -372,6 +383,7 @@ textarea.readonly {
         <!-- ── TAB 1: Text to File ── -->
         <div id="tab-text_to_file" class="tab-content <?= $activeTab === 'text_to_file' ? 'active' : '' ?>">
             <form method="POST">
+                    <?= Csrf::inputField() ?>
                 <input type="hidden" name="active_tab" value="text_to_file">
                 
                 <div class="field-group">

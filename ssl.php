@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/bootstrap.php';
 /**
  * 🔐 Local SSL Generator (Self-Signed) - No API Required
  * Date: 1405/01/23 (2026/04/12)
@@ -9,10 +10,17 @@ $message = '';
 $sslData = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $domain = trim($_POST['domain']);
-    $company = trim($_POST['company']);
-    $email = trim($_POST['email']);
-    $days = (int)$_POST['days'];
+    try {
+        Csrf::verifyOrFail((bool)app_config('SECURITY_CSRF_ENABLED', true));
+        $domain = InputValidator::normalizeHostLike((string)($_POST['domain'] ?? ''));
+        $company = trim((string)($_POST['company'] ?? ''));
+        $email = filter_var(trim((string)($_POST['email'] ?? '')), FILTER_VALIDATE_EMAIL) ? trim((string)$_POST['email']) : '';
+        $days = InputValidator::sanitizeDays($_POST['days'] ?? 365, 1, 825);
+    } catch (Throwable $e) {
+        $message = "درخواست نامعتبر است.";
+        $domain = $company = $email = '';
+        $days = 365;
+    }
 
     if (empty($domain)) {
         $message = "وارد کردن نام دامنه الزامی است.";
@@ -98,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php if (!$sslData): ?>
         <form method="post">
+            <?= Csrf::inputField() ?>
             <div class="form-group">
                 <label>نام دامنه (مثال: example.com):</label>
                 <input type="text" name="domain" required placeholder="example.com">

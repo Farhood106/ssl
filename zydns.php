@@ -4,9 +4,17 @@
 // Architecture: SSE (Server-Sent Events) + Streaming PHP
 // ============================================================
 declare(strict_types=1);
+require_once __DIR__ . '/bootstrap.php';
 
 // ── SSE endpoint ──────────────────────────────────────────
 if (isset($_GET['stream']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        Csrf::verifyOrFail((bool)app_config('SECURITY_CSRF_ENABLED', true));
+    } catch (Throwable $e) {
+        header('Content-Type: text/event-stream');
+        echo 'data: ' . json_encode(['type' => 'error', 'message' => 'Invalid request token.']) . "\n\n";
+        exit;
+    }
     $rawDomain = trim($_POST['domain'] ?? '');
     streamDNSAnalysis($rawDomain);
     exit;
@@ -45,6 +53,12 @@ function streamDNSAnalysis(string $rawDomain): void
 
     if (!preg_match('/^(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/', $domain)) {
         $emit(['type' => 'error', 'message' => 'Invalid domain name.']);
+        return;
+    }
+    try {
+        NetworkGuard::assertHostAllowed($domain, (bool)app_config('SECURITY_NETWORK_GUARD_ENABLED', true));
+    } catch (Throwable $e) {
+        $emit(['type' => 'error', 'message' => 'Target blocked by network policy.']);
         return;
     }
 
@@ -156,6 +170,9 @@ class DNSChecker
     // ── UDP probe on port 53 ──
     private function probeDNSUDP(string $host, int $timeout = 3): bool
     {
+        if ((bool)app_config('SECURITY_NETWORK_GUARD_ENABLED', true)) {
+            NetworkGuard::assertHostAllowed($host, true);
+        }
         $ip = gethostbyname($host);
         $sock = @fsockopen("udp://{$ip}", 53, $errno, $errstr, $timeout);
         if (!$sock) return false;
@@ -171,6 +188,9 @@ class DNSChecker
     // ── TCP probe on port 53 ──
     private function probeDNSTCP(string $host, int $timeout = 3): bool
     {
+        if ((bool)app_config('SECURITY_NETWORK_GUARD_ENABLED', true)) {
+            NetworkGuard::assertHostAllowed($host, true);
+        }
         $ip   = gethostbyname($host);
         $sock = @fsockopen($ip, 53, $errno, $errstr, $timeout);
         if (!$sock) return false;

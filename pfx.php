@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/bootstrap.php';
 
 class PfxGenerator
 {
@@ -69,6 +70,7 @@ class PfxGenerator
             is_uploaded_file($fileInput['tmp_name']) &&
             $fileInput['error'] === UPLOAD_ERR_OK
         ) {
+            UploadGuard::assertUploadOk($fileInput, (int)app_config('UPLOAD_MAX_PEM_BYTES', 2 * 1024 * 1024));
             $content = file_get_contents($fileInput['tmp_name']);
             if ($content === false) {
                 throw new RuntimeException('Cannot read uploaded file.');
@@ -80,8 +82,7 @@ class PfxGenerator
 
     public static function sanitizePassword(string $password): string
     {
-        $password = trim($password);
-        return preg_replace('/[^\x20-\x7E]/', '', $password) ?? '';
+        return InputValidator::sanitizePassword($password);
     }
 
     private function getOpenSSLError(): string
@@ -182,7 +183,6 @@ $extracted = null;
 
 // Download single PEM file
 if (isset($_GET['download']) && isset($_SESSION['pfx_extracted'])) {
-    session_start();
     $type = $_GET['download'];
     $data = $_SESSION['pfx_extracted'];
 
@@ -205,7 +205,6 @@ if (isset($_GET['download']) && isset($_SESSION['pfx_extracted'])) {
 
 // Download ZIP
 if (isset($_GET['download']) && $_GET['download'] === 'zip' && isset($_SESSION['pfx_extracted'])) {
-    session_start();
     $extractor = new PfxExtractor();
     try {
         $zipData = $extractor->createZip($_SESSION['pfx_extracted']);
@@ -220,9 +219,13 @@ if (isset($_GET['download']) && $_GET['download'] === 'zip' && isset($_SESSION['
     }
 }
 
-session_start();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        Csrf::verifyOrFail((bool)app_config('SECURITY_CSRF_ENABLED', true));
+    } catch (Throwable $e) {
+        $error = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+    }
+
     $tab = $_POST['active_tab'] ?? 'generate';
 
     // ── Generate PFX ──
@@ -262,6 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 is_uploaded_file($_FILES['pfx_file']['tmp_name']) &&
                 $_FILES['pfx_file']['error'] === UPLOAD_ERR_OK
             ) {
+                UploadGuard::assertUploadOk($_FILES['pfx_file'], (int)app_config('UPLOAD_MAX_PFX_BYTES', 10 * 1024 * 1024));
                 $pfxData = file_get_contents($_FILES['pfx_file']['tmp_name']);
             }
 
@@ -446,6 +450,8 @@ input[type="file"] { display: none; }
         <!-- ── Tab: Generate PFX ── -->
         <div id="tab-generate" class="tab-content <?= $tab === 'generate' ? 'active' : '' ?>">
             <form method="POST" enctype="multipart/form-data">
+                <?= Csrf::inputField() ?>
+                <?= Csrf::inputField() ?>
                 <input type="hidden" name="active_tab" value="generate">
 
                 <div class="field-group">

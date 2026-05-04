@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/bootstrap.php';
 // ══════════════════════════════════════════════════════════════
 //  SSL Checker Pro — index.php
 //  تاریخ به‌روزرسانی: 1405/01/23
@@ -137,14 +138,11 @@ function getKeyInfo(array $info): array {
 }
 
 function checkSSL(string $domain, int $port = 443): array {
-    $domain = trim(preg_replace('#^https?://#', '', $domain));
-    $domain = explode('/', $domain)[0];
-    $parts  = explode(':', $domain);
-    if (count($parts) === 2 && is_numeric($parts[1])) {
-        $domain = $parts[0]; $port = (int)$parts[1];
-    } else {
-        $domain = $parts[0];
+    [$domain, $port] = InputValidator::splitHostPort($domain, $port);
+    if (!InputValidator::isValidDomain($domain)) {
+        return ['domain'=>$domain,'port'=>$port,'status'=>'invalid_input','message'=>'دامنه نامعتبر است'];
     }
+    NetworkGuard::assertHostAllowed($domain, (bool)app_config('SECURITY_NETWORK_GUARD_ENABLED', true));
     $target  = "ssl://{$domain}:{$port}";
     $timeout = 12;
     $context = stream_context_create(['ssl' => [
