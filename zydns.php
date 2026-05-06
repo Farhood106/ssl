@@ -24,6 +24,7 @@ if (isset($_GET['stream']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Main page (no processing here) ───────────────────────
 // HTML is served immediately; JS initiates the SSE fetch.
+$csrfToken = htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8');
 
 // ============================================================
 //  SSE STREAMING ENGINE
@@ -949,6 +950,7 @@ td { padding:.75rem 1rem; vertical-align:top; }
 // ═══════════════════════════════════════════════════════
 //  CLIENT-SIDE PROGRESSIVE LOADER
 // ═══════════════════════════════════════════════════════
+const CSRF_TOKEN = '<?= $csrfToken ?>';
 
 const SECTIONS   = ['parent','ns','soa','mx','www'];
 const TOTAL_SECS = SECTIONS.length;
@@ -979,6 +981,7 @@ function startAnalysis() {
 
     const formData = new FormData();
     formData.append('domain', domain);
+    formData.append('_csrf', CSRF_TOKEN);
 
     fetch('?stream=1', { method:'POST', body: formData })
         .then(res => {
