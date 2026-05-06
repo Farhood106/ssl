@@ -5,6 +5,8 @@
 // ============================================================
 declare(strict_types=1);
 require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/lib/Services/Dns/DnsResolverService.php';
+require_once __DIR__ . '/lib/Services/Dns/DnsProbeService.php';
 
 // ── SSE endpoint ──────────────────────────────────────────
 if (isset($_GET['stream']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -78,6 +80,8 @@ class DNSChecker
 {
     private string $domain;
     private array  $dnsCache = [];
+    private DnsResolverService $resolver;
+    private DnsProbeService $probe;
     /** @var callable */
     private $emit;
 
@@ -93,6 +97,8 @@ class DNSChecker
     {
         $this->domain = $domain;
         $this->emit   = $emit;
+        $this->resolver = new DnsResolverService();
+        $this->probe = new DnsProbeService($this->resolver);
     }
 
     // ── Public entry: run each section, emit after each ──
@@ -127,75 +133,37 @@ class DNSChecker
     // ── DNS query with internal cache ──
     private function queryDNS(string $host, int $type): array
     {
-        $key = $host . ':' . $type;
-        if (!isset($this->dnsCache[$key])) {
-            $this->dnsCache[$key] = @dns_get_record($host, $type) ?: [];
-        }
-        return $this->dnsCache[$key];
+        return $this->resolver->queryCached($host, $type);
     }
 
     // ── PTR lookup ──
     private function lookupPTR(string $ip): ?string
     {
-        $parts = array_reverse(explode('.', $ip));
-        $arpa  = implode('.', $parts) . '.in-addr.arpa';
-        $rec   = $this->queryDNS($arpa, DNS_PTR);
-        return $rec[0]['target'] ?? null;
+        return $this->resolver->lookupPtr($ip);
     }
 
     // ── ASN (Team Cymru) ──
     private function lookupASN(string $ip): ?int
     {
-        $parts  = array_reverse(explode('.', $ip));
-        $query  = implode('.', $parts) . '.origin.asn.cymru.com';
-        $result = @dns_get_record($query, DNS_TXT);
-        if (!empty($result[0]['txt'])) {
-            if (preg_match('/^(\d+)/', trim($result[0]['txt']), $m)) {
-                return (int)$m[1];
-            }
-        }
-        return null;
+        return $this->probe->lookupAsn($ip);
     }
 
     // ── Private IP? ──
     private function isPrivateIP(string $ip): bool
     {
-        return (bool)filter_var(
-            $ip,
-            FILTER_VALIDATE_IP,
-            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        ) === false;
+        return $this->probe->isPrivateOrReservedIp($ip);
     }
 
     // ── UDP probe on port 53 ──
     private function probeDNSUDP(string $host, int $timeout = 3): bool
     {
-        if ((bool)app_config('SECURITY_NETWORK_GUARD_ENABLED', true)) {
-            NetworkGuard::assertHostAllowed($host, true);
-        }
-        $ip = gethostbyname($host);
-        $sock = @fsockopen("udp://{$ip}", 53, $errno, $errstr, $timeout);
-        if (!$sock) return false;
-        // Minimal DNS query for root
-        $query = "\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x01";
-        fwrite($sock, $query);
-        stream_set_timeout($sock, $timeout);
-        $resp = fread($sock, 512);
-        fclose($sock);
-        return $resp !== false && strlen($resp) > 0;
+        return $this->probe->probeUdp53($host, $timeout);
     }
 
     // ── TCP probe on port 53 ──
     private function probeDNSTCP(string $host, int $timeout = 3): bool
     {
-        if ((bool)app_config('SECURITY_NETWORK_GUARD_ENABLED', true)) {
-            NetworkGuard::assertHostAllowed($host, true);
-        }
-        $ip   = gethostbyname($host);
-        $sock = @fsockopen($ip, 53, $errno, $errstr, $timeout);
-        if (!$sock) return false;
-        fclose($sock);
-        return true;
+        return $this->probe->probeTcp53($host, $timeout);
     }
 
     // ── Build one result array ──
