@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../lib/Services/Dns/DnsResolverService.php';
+require_once __DIR__ . '/../lib/Services/Dns/DnsProbeService.php';
 
 // ============================================================
 // DNS CHECKER — Full Implementation
@@ -28,12 +31,16 @@ class DNSChecker
     private array   $domainNS      = [];
     private array   $mxRecords     = [];
     private ?array  $soaRecord     = null;
-    private ?callable $streamCallback = null;
+    private $streamCallback = null;
+    private DnsResolverService $resolver;
+    private DnsProbeService $probe;
 
     // ─────────────────────────────────────────
     public function __construct(string $domain)
     {
         $this->domain = rtrim(strtolower($domain), '.');
+        $this->resolver = new DnsResolverService();
+        $this->probe = new DnsProbeService($this->resolver);
     }
 
     public function setStreamCallback(callable $cb): void
@@ -74,39 +81,28 @@ class DNSChecker
 
     private function queryDNS(string $host, int $type): array
     {
-        try {
-            $records = @dns_get_record($host, $type);
-            return is_array($records) ? $records : [];
-        } catch (\Throwable) {
-            return [];
-        }
+        return $this->resolver->queryCached($host, $type);
     }
 
     private function resolveIP(string $host): ?string
     {
-        $a = $this->queryDNS($host, DNS_A);
-        return $a[0]['ip'] ?? null;
+        $ips = $this->resolver->resolveA($host);
+        return $ips[0] ?? null;
     }
 
     private function lookupPTR(string $ip): ?string
     {
-        $rev  = implode('.', array_reverse(explode('.', $ip))) . '.in-addr.arpa';
-        $recs = $this->queryDNS($rev, DNS_PTR);
-        return $recs[0]['target'] ?? null;
+        return $this->resolver->lookupPtr($ip);
     }
 
     private function isPrivateIP(string $ip): bool
     {
-        return filter_var(
-            $ip,
-            FILTER_VALIDATE_IP,
-            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        ) === false;
+        return $this->probe->isPrivateOrReservedIp($ip);
     }
 
     private function fetchSPF(): ?string
     {
-        $txts = $this->queryDNS($this->domain, DNS_TXT);
+        $txts = $this->resolver->queryCached($this->domain, DNS_TXT);
         foreach ($txts as $t) {
             $val = implode('', (array)($t['entries'] ?? [$t['txt'] ?? '']));
             if (str_starts_with(strtolower($val), 'v=spf1')) return $val;
@@ -116,7 +112,7 @@ class DNSChecker
 
     private function fetchDMARC(): ?string
     {
-        $txts = $this->queryDNS('_dmarc.' . $this->domain, DNS_TXT);
+        $txts = $this->resolver->queryCached('_dmarc.' . $this->domain, DNS_TXT);
         foreach ($txts as $t) {
             $val = implode('', (array)($t['entries'] ?? [$t['txt'] ?? '']));
             if (str_starts_with(strtolower($val), 'v=dmarc1')) return $val;
