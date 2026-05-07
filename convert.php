@@ -1,32 +1,20 @@
 <?php
 declare(strict_types=1);
-
-session_start();
+require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/lib/Support/FileNameHelper.php';
+require_once __DIR__ . '/lib/Services/Conversion/DownloadService.php';
+require_once __DIR__ . '/lib/Services/Conversion/ZipConversionService.php';
 
 // تاریخ بروزرسانی: 1405/01/23
 
 // ─── توابع کمکی ─────────────────────────────────────────────────────────────
 
 function getDomainFromCert(string $certPem): string {
-    if (empty(trim($certPem))) {
-        return 'certificate';
-    }
-    $parsed = openssl_x509_parse($certPem);
-    if ($parsed && isset($parsed['subject']['CN'])) {
-        $domain = $parsed['subject']['CN'];
-        $domain = str_replace('*.', 'wildcard_', $domain);
-        return preg_replace('/[^a-zA-Z0-9.-]/', '_', $domain);
-    }
-    return 'certificate';
+    return FileNameHelper::domainFromCertPem($certPem);
 }
 
 function downloadTextFile(string $content, string $filename, string $mimeType = 'text/plain'): void {
-    header('Content-Type: ' . $mimeType);
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-    header('Content-Length: ' . strlen($content));
-    header('Cache-Control: no-store, no-cache, must-revalidate');
-    echo $content;
-    exit;
+    DownloadService::sendText($content, $filename, $mimeType);
 }
 
 // ─── پردازش درخواست‌ها ────────────────────────────────────────────────────────
@@ -37,6 +25,11 @@ $activeTab = $_POST['active_tab'] ?? 'text_to_file';
 $extractedData = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        Csrf::verifyOrFail((bool)app_config('SECURITY_CSRF_ENABLED', true));
+    } catch (Throwable $e) {
+        $error = 'درخواست نامعتبر است.';
+    }
     $action = $_POST['action'] ?? '';
     $activeTab = $_POST['active_tab'] ?? 'text_to_file';
 
@@ -64,26 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($certText) && empty($keyText) && empty($caText)) {
                 $error = 'مقداری برای ایجاد فایل وارد نشده است.';
             } else {
-                if (!class_exists('ZipArchive')) {
-                    $error = 'افزونه ZipArchive فعال نیست.';
-                } else {
-                    $tmpFile = tempnam(sys_get_temp_dir(), 'ssl_zip_');
-                    $zip = new ZipArchive();
-                    if ($zip->open($tmpFile, ZipArchive::CREATE) === true) {
-                        if (!empty($certText)) $zip->addFromString("{$domain}_certificate.crt", $certText);
-                        if (!empty($keyText))  $zip->addFromString("{$domain}_private.key", $keyText);
-                        if (!empty($caText))   $zip->addFromString("{$domain}_ca-bundle.crt", $caText);
-                        $zip->close();
-
-                        header('Content-Type: application/zip');
-                        header('Content-Disposition: attachment; filename="' . $domain . '_ssl_files.zip"');
-                        header('Content-Length: ' . filesize($tmpFile));
-                        readfile($tmpFile);
-                        unlink($tmpFile);
-                        exit;
-                    } else {
-                        $error = 'خطا در ایجاد فایل ZIP.';
-                    }
+                try {
+                    $zipData = ZipConversionService::buildZipFromSslTexts($domain, $certText, $keyText, $caText);
+                    DownloadService::sendZipContent($zipData, $domain . '_ssl_files.zip');
+                } catch (Throwable $e) {
+                    $error = $e->getMessage();
                 }
             }
         }
@@ -92,29 +70,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ── بخش استخراج از ZIP ──
     if ($action === 'extract_zip') {
         if (isset($_FILES['zip_file']) && $_FILES['zip_file']['error'] === UPLOAD_ERR_OK) {
+            if ((bool)app_config('SECURITY_UPLOAD_LIMITS_ENABLED', true)) {
+                UploadGuard::assertUploadOk($_FILES['zip_file'], (int)app_config('UPLOAD_MAX_ZIP_BYTES', 10 * 1024 * 1024));
+            }
             $zipPath = $_FILES['zip_file']['tmp_name'];
-            $zip = new ZipArchive();
             
-            if ($zip->open($zipPath) === true) {
-                $extCert = ''; $extKey = ''; $extCa = '';
-                
-                for ($i = 0; $i < $zip->numFiles; $i++) {
-                    $filename = $zip->getNameIndex($i);
-                    $content = $zip->getFromIndex($i);
-                    $lowerName = strtolower($filename);
-                    
-                    if (str_ends_with($filename, '/') || str_contains($lowerName, '__macosx')) continue;
+            if ((bool)app_config('SECURITY_ZIP_LIMITS_ENABLED', true)) {
+                ZipGuard::assertZipSafe($zipPath, ZipGuard::defaultLimits());
+            }
 
-                    if (str_contains($lowerName, 'key') || str_contains($lowerName, 'private')) {
-                        $extKey = trim($content);
-                    } elseif (str_contains($lowerName, 'ca') || str_contains($lowerName, 'bundle') || str_contains($lowerName, 'root') || str_contains($lowerName, 'intermediate')) {
-                        $extCa = trim($content);
-                    } elseif (str_contains($lowerName, 'crt') || str_contains($lowerName, 'cert')) {
-                        $extCert = trim($content);
-                    }
-                }
-                $zip->close();
-                
+            try {
+                $parts = ZipConversionService::extractSslPartsFromZip($zipPath);
+                $extCert = $parts['cert'] ?? '';
+                $extKey = $parts['key'] ?? '';
+                $extCa = $parts['ca'] ?? '';
+
                 if (empty($extCert) && empty($extKey) && empty($extCa)) {
                     $error = 'فایل‌های معتبر SSL در این ZIP یافت نشد.';
                 } else {
@@ -126,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ];
                     $_SESSION['extracted_ssl'] = $extractedData;
                 }
-            } else {
-                $error = 'خطا در باز کردن فایل ZIP.';
+            } catch (Throwable $e) {
+                $error = $e->getMessage();
             }
         } else {
             $error = 'لطفاً فایل ZIP معتبر آپلود کنید.';
@@ -372,6 +342,7 @@ textarea.readonly {
         <!-- ── TAB 1: Text to File ── -->
         <div id="tab-text_to_file" class="tab-content <?= $activeTab === 'text_to_file' ? 'active' : '' ?>">
             <form method="POST">
+                    <?= Csrf::inputField() ?>
                 <input type="hidden" name="active_tab" value="text_to_file">
                 
                 <div class="field-group">

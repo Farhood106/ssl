@@ -1,178 +1,8 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/bootstrap.php';
 
-class PfxGenerator
-{
-    public function generate(
-        string $certPem,
-        string $privateKey,
-        string $caBundlePem = '',
-        string $password = ''
-    ): string {
-        $cert = openssl_x509_read($certPem);
-        if ($cert === false) {
-            throw new RuntimeException('Invalid certificate: ' . $this->getOpenSSLError());
-        }
-
-        $key = openssl_pkey_get_private($privateKey);
-        if ($key === false) {
-            throw new RuntimeException('Invalid private key: ' . $this->getOpenSSLError());
-        }
-
-        if (!openssl_x509_check_private_key($cert, $key)) {
-            throw new RuntimeException('Private key does not match the certificate.');
-        }
-
-        $caChain = [];
-        if (!empty(trim($caBundlePem))) {
-            $caChain = $this->parseCaBundle($caBundlePem);
-        }
-
-        $pfxData = '';
-        $options = [
-            'friendly_name'      => 'Certificate',
-            'extracerts'         => $caChain,
-            'encrypt_key'        => true,
-            'encrypt_key_cipher' => OPENSSL_CIPHER_AES_256_CBC,
-        ];
-
-        $result = openssl_pkcs12_export($cert, $pfxData, $key, $password, $options);
-
-        if (!$result || empty($pfxData)) {
-            throw new RuntimeException('Failed to generate PFX: ' . $this->getOpenSSLError());
-        }
-
-        return $pfxData;
-    }
-
-    private function parseCaBundle(string $bundle): array
-    {
-        $certs = [];
-        preg_match_all(
-            '/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s',
-            $bundle,
-            $matches
-        );
-        foreach ($matches[0] as $pem) {
-            $ca = openssl_x509_read($pem);
-            if ($ca !== false) {
-                $certs[] = $ca;
-            }
-        }
-        return $certs;
-    }
-
-    public static function resolveInput(array $fileInput, string $textInput): string
-    {
-        if (
-            isset($fileInput['tmp_name']) &&
-            is_uploaded_file($fileInput['tmp_name']) &&
-            $fileInput['error'] === UPLOAD_ERR_OK
-        ) {
-            $content = file_get_contents($fileInput['tmp_name']);
-            if ($content === false) {
-                throw new RuntimeException('Cannot read uploaded file.');
-            }
-            return $content;
-        }
-        return trim($textInput);
-    }
-
-    public static function sanitizePassword(string $password): string
-    {
-        $password = trim($password);
-        return preg_replace('/[^\x20-\x7E]/', '', $password) ?? '';
-    }
-
-    private function getOpenSSLError(): string
-    {
-        $errors = [];
-        while ($msg = openssl_error_string()) {
-            $errors[] = $msg;
-        }
-        return implode(' | ', $errors) ?: 'Unknown OpenSSL error';
-    }
-}
-
-class PfxExtractor
-{
-    /**
-     * Extract certificate, private key, and CA chain from a PFX file
-     */
-    public function extract(string $pfxData, string $password): array
-    {
-        $certs = [];
-        $result = openssl_pkcs12_read($pfxData, $certs, $password);
-
-        if (!$result) {
-            $result = openssl_pkcs12_read($pfxData, $certs, '');
-            if (!$result) {
-                throw new RuntimeException('Failed to read PFX. Wrong password or corrupted file.');
-            }
-        }
-
-        $cert     = $certs['cert']        ?? '';
-        $key      = $certs['pkey']        ?? '';
-        $caArray  = $certs['extracerts']  ?? [];
-
-        $certPem = $this->normalizePem($cert, 'CERTIFICATE');
-        $keyPem = $this->normalizePem($key, 'PRIVATE KEY');
-
-        $caPems = [];
-        foreach ($caArray as $ca) {
-            $normalized = $this->normalizePem($ca, 'CERTIFICATE');
-            if (!empty($normalized)) {
-                $caPems[] = $normalized;
-            }
-        }
-
-        $caBundle = implode("\n", $caPems);
-
-        return [
-            'cert'     => $certPem,
-            'key'      => $keyPem,
-            'ca'       => $caBundle,
-            'ca_array' => $caPems,
-        ];
-    }
-
-    private function normalizePem(mixed $input, string $type): string
-    {
-        if (empty($input)) return '';
-        if (is_string($input) && str_contains($input, '-----BEGIN')) return trim($input) . "\n";
-        
-        if ($type === 'CERTIFICATE') {
-            $pem = '';
-            if (openssl_x509_export($input, $pem)) return trim($pem) . "\n";
-        }
-        if ($type === 'PRIVATE KEY') {
-            $pem = '';
-            if (openssl_pkey_export($input, $pem)) return trim($pem) . "\n";
-        }
-        return '';
-    }
-
-    public function createZip(array $extracted): string
-    {
-        if (!class_exists('ZipArchive')) throw new RuntimeException('ZipArchive extension is not available.');
-
-        $tmpFile = tempnam(sys_get_temp_dir(), 'pfx_zip_') . '.zip';
-        $zip = new ZipArchive();
-
-        if ($zip->open($tmpFile, ZipArchive::CREATE) !== true) throw new RuntimeException('Cannot create ZIP archive.');
-
-        if (!empty($extracted['cert'])) $zip->addFromString('certificate.crt', $extracted['cert']);
-        if (!empty($extracted['key']))  $zip->addFromString('private.key', $extracted['key']);
-        if (!empty($extracted['ca']))   $zip->addFromString('ca_bundle.crt', $extracted['ca']);
-
-        $zip->close();
-        $data = file_get_contents($tmpFile);
-        unlink($tmpFile);
-
-        if ($data === false) throw new RuntimeException('Failed to read ZIP file.');
-        return $data;
-    }
-}
+require_once __DIR__ . '/lib/Services/Pfx/PfxService.php';
 
 // ─── پردازش درخواست‌ها ────────────────────────────────────────────────────────
 
@@ -182,15 +12,11 @@ $extracted = null;
 
 // Download single PEM file
 if (isset($_GET['download']) && isset($_SESSION['pfx_extracted'])) {
-    session_start();
     $type = $_GET['download'];
     $data = $_SESSION['pfx_extracted'];
 
-    $map = [
-        'cert' => ['certificate.crt', 'application/x-pem-file', $data['cert']],
-        'key'  => ['private.key',     'application/x-pem-file', $data['key']],
-        'ca'   => ['ca_bundle.crt',   'application/x-pem-file', $data['ca']],
-    ];
+    $pfxService = new PfxService();
+    $map = $pfxService->buildDownloadMap($data);
 
     if (isset($map[$type]) && !empty($map[$type][2])) {
         [$filename, $mime, $content] = $map[$type];
@@ -205,10 +31,9 @@ if (isset($_GET['download']) && isset($_SESSION['pfx_extracted'])) {
 
 // Download ZIP
 if (isset($_GET['download']) && $_GET['download'] === 'zip' && isset($_SESSION['pfx_extracted'])) {
-    session_start();
-    $extractor = new PfxExtractor();
+    $pfxService = new PfxService();
     try {
-        $zipData = $extractor->createZip($_SESSION['pfx_extracted']);
+        $zipData = $pfxService->createZipFromExtracted($_SESSION['pfx_extracted']);
         header('Content-Type: application/zip');
         header('Content-Disposition: attachment; filename="certificates.zip"');
         header('Content-Length: ' . strlen($zipData));
@@ -220,24 +45,28 @@ if (isset($_GET['download']) && $_GET['download'] === 'zip' && isset($_SESSION['
     }
 }
 
-session_start();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        Csrf::verifyOrFail((bool)app_config('SECURITY_CSRF_ENABLED', true));
+    } catch (Throwable $e) {
+        $error = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+    }
+
     $tab = $_POST['active_tab'] ?? 'generate';
 
     // ── Generate PFX ──
     if ($tab === 'generate') {
         try {
-            $generator  = new PfxGenerator();
-            $certPem    = PfxGenerator::resolveInput($_FILES['cert_file'] ?? [], $_POST['cert_text'] ?? '');
-            $privateKey = PfxGenerator::resolveInput($_FILES['key_file']  ?? [], $_POST['key_text']  ?? '');
-            $caBundle   = PfxGenerator::resolveInput($_FILES['ca_file']   ?? [], $_POST['ca_text']   ?? '');
-            $password   = PfxGenerator::sanitizePassword($_POST['pfx_password'] ?? '');
+            $pfxService = new PfxService();
+            $certPem    = $pfxService->resolveInput($_FILES['cert_file'] ?? [], $_POST['cert_text'] ?? '');
+            $privateKey = $pfxService->resolveInput($_FILES['key_file']  ?? [], $_POST['key_text']  ?? '');
+            $caBundle   = $pfxService->resolveInput($_FILES['ca_file']   ?? [], $_POST['ca_text']   ?? '');
+            $password   = $pfxService->sanitizePassword($_POST['pfx_password'] ?? '');
 
             if (empty($certPem))    throw new InvalidArgumentException('Certificate is required.');
             if (empty($privateKey)) throw new InvalidArgumentException('Private key is required.');
 
-            $pfxData = $generator->generate($certPem, $privateKey, $caBundle, $password);
+            $pfxData = $pfxService->generatePfx($certPem, $privateKey, $caBundle, $password);
 
             header('Content-Type: application/x-pkcs12');
             header('Content-Disposition: attachment; filename="certificate.pfx"');
@@ -254,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ── Extract PFX ──
     if ($tab === 'extract') {
         try {
-            $extractor = new PfxExtractor();
+            $pfxService = new PfxService();
             $pfxData   = '';
 
             if (
@@ -262,13 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 is_uploaded_file($_FILES['pfx_file']['tmp_name']) &&
                 $_FILES['pfx_file']['error'] === UPLOAD_ERR_OK
             ) {
+                UploadGuard::assertUploadOk($_FILES['pfx_file'], (int)app_config('UPLOAD_MAX_PFX_BYTES', 10 * 1024 * 1024));
                 $pfxData = file_get_contents($_FILES['pfx_file']['tmp_name']);
             }
 
             if (empty($pfxData)) throw new InvalidArgumentException('Please upload a PFX file.');
 
-            $password  = PfxGenerator::sanitizePassword($_POST['extract_password'] ?? '');
-            $extracted = $extractor->extract($pfxData, $password);
+            $password  = $pfxService->sanitizePassword($_POST['extract_password'] ?? '');
+            $extracted = $pfxService->extractPfx($pfxData, $password);
             $_SESSION['pfx_extracted'] = $extracted;
 
         } catch (Throwable $e) {
@@ -446,6 +276,8 @@ input[type="file"] { display: none; }
         <!-- ── Tab: Generate PFX ── -->
         <div id="tab-generate" class="tab-content <?= $tab === 'generate' ? 'active' : '' ?>">
             <form method="POST" enctype="multipart/form-data">
+                <?= Csrf::inputField() ?>
+                <?= Csrf::inputField() ?>
                 <input type="hidden" name="active_tab" value="generate">
 
                 <div class="field-group">

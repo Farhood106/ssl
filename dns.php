@@ -1,21 +1,32 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/bootstrap.php';
 
 // ── DNS lookup endpoint (AJAX) ──
 if (isset($_GET['dns_lookup'])) {
     header('Content-Type: application/json');
-    $domain = trim($_GET['domain'] ?? '');
-    $domain = preg_replace('/^(?:https?:\/\/)?(?:www\.)?/i', '', $domain);
-    $domain = explode('/', $domain)[0];
+    $domain = InputValidator::normalizeHostLike((string)($_GET['domain'] ?? ''));
 
-    if (!$domain || !preg_match('/^[a-zA-Z0-9.\-]+$/', $domain)) {
+    if (!$domain || !InputValidator::isValidDomain($domain)) {
         echo json_encode(['error' => 'دامنه نامعتبر است.']);
+        exit;
+    }
+    try {
+        NetworkGuard::assertHostAllowed($domain, (bool)app_config('SECURITY_NETWORK_GUARD_ENABLED', true));
+    } catch (Throwable) {
+        echo json_encode(['error' => 'دسترسی به مقصد مسدود است.']);
         exit;
     }
 
     $records = @dns_get_record($domain, DNS_A);
     if ($records && count($records) > 0) {
-        $ips = array_column($records, 'ip');
+        $ips = array_values(array_filter(array_column($records, 'ip'), static function ($ip) {
+            return !NetworkGuard::isDisallowedIP((string)$ip);
+        }));
+        if (empty($ips)) {
+            echo json_encode(['error' => 'IP مجاز یافت نشد.']);
+            exit;
+        }
         echo json_encode(['ips' => array_values($ips)]);
     } else {
         echo json_encode(['error' => 'رکورد A یافت نشد.']);
