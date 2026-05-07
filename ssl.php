@@ -71,83 +71,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>آفلاین SSL ساز حرفه‌ای</title>
-    <style>
-        body { font-family: Tahoma, sans-serif; background: #f0f2f5; color: #1e293b; padding: 20px; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-top: 0; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        input[type="text"], input[type="number"], input[type="email"] { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; direction: ltr; text-align: left; }
-        .btn { background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: bold; width: 100%; transition: background 0.3s; }
-        .btn:hover { background: #2563eb; }
-        .alert { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #f87171; }
-        .result-box { margin-top: 30px; }
-        .code-block { background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 0.85em; overflow-x: auto; white-space: pre; direction: ltr; margin-bottom: 20px; border-left: 4px solid #3b82f6; }
-        .info { background: #e0f2fe; color: #0369a1; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9em; }
-    </style>
-</head>
-<body>
+<?php
+$currentPage = 'ssl';
+require_once 'header.php';
+?>
 
-<div class="container">
-    <h2>🛠️ ابزار تولید SSL کاملاً آفلاین (بدون API)</h2>
-    
-    <div class="info">
-        <strong>توجه:</strong> این ابزار با استفاده از کتابخانه داخلی <code>OpenSSL</code> سرور شما کار می‌کند. گواهی تولید شده از نوع Self-Signed است و نیازی به هیچ‌گونه اتصال اینترنتی یا API خارجی ندارد. رمزنگاری آن $2048$ بیت و کاملاً امن است.
-    </div>
+<main class="wrap">
+    <section class="page-header">
+        <h1>🛠️ ابزار تولید SSL کاملاً آفلاین (بدون API)</h1>
+        <p>تولید Self-Signed Certificate با OpenSSL داخلی سرور، بدون API خارجی.</p>
+    </section>
 
-    <?php if ($message): ?>
-        <div class="alert"><?= htmlspecialchars($message) ?></div>
-    <?php endif; ?>
-
-    <?php if (!$sslData): ?>
-        <form method="post">
-            <?= Csrf::inputField() ?>
-            <div class="form-group">
-                <label>نام دامنه (مثال: example.com):</label>
-                <input type="text" name="domain" required placeholder="example.com">
+    <section class="ui-card">
+        <div class="ui-card__body ui-stack">
+            <div class="ui-alert ui-alert--info">
+                <div>
+                    <strong>توجه:</strong> این ابزار با استفاده از کتابخانه داخلی <code>OpenSSL</code> سرور شما کار می‌کند. گواهی تولید شده از نوع Self-Signed است و نیازی به هیچ‌گونه اتصال اینترنتی یا API خارجی ندارد. رمزنگاری آن $2048$ بیت و کاملاً امن است.
+                </div>
             </div>
-            <div class="form-group">
-                <label>نام سازمان / شرکت (اختیاری):</label>
-                <input type="text" name="company" placeholder="My Company LLC">
-            </div>
-            <div class="form-group">
-                <label>ایمیل مدیر (اختیاری):</label>
-                <input type="email" name="email" placeholder="admin@example.com">
-            </div>
-            <div class="form-group">
-                <label>مدت اعتبار (به روز):</label>
-                <input type="number" name="days" value="365" required>
-            </div>
-            <button type="submit" class="btn">تولید فوری گواهی SSL</button>
-        </form>
-    <?php else: ?>
-        
-        <div class="result-box">
-            <h3 style="color: #16a34a;">✅ گواهی با موفقیت تولید شد!</h3>
-            <p>اطلاعات زیر به صورت کاملاً آفلاین در سرور شما (بدون ارسال به هیچ API) ایجاد شده است.</p>
 
-            <h4>1. کلید خصوصی (Private Key)</h4>
-            <p style="font-size: 0.8em; color: #64748b;">این کلید محرمانه است و برای نصب در وب‌سرور الزامی است.</p>
-            <div class="code-block"><?= htmlspecialchars($sslData['key']) ?></div>
+            <?php if ($message): ?>
+                <div class="ui-alert ui-alert--danger" role="alert"><?= htmlspecialchars($message) ?></div>
+            <?php endif; ?>
 
-            <h4>2. گواهی صادر شده (Certificate - CRT)</h4>
-            <p style="font-size: 0.8em; color: #64748b;">این گواهی را در بخش Certificate هاست خود وارد کنید.</p>
-            <div class="code-block"><?= htmlspecialchars($sslData['crt']) ?></div>
+            <?php if (!$sslData): ?>
+                <form method="post" class="ui-stack">
+                    <?= Csrf::inputField() ?>
+                    <div class="ui-field">
+                        <label class="ui-label" for="ssl-domain">نام دامنه (مثال: example.com):</label>
+                        <input class="ui-input ui-ltr" type="text" name="domain" id="ssl-domain" required placeholder="example.com">
+                    </div>
+                    <div class="ui-field">
+                        <label class="ui-label" for="ssl-company">نام سازمان / شرکت (اختیاری):</label>
+                        <input class="ui-input ui-ltr" type="text" name="company" id="ssl-company" placeholder="My Company LLC">
+                    </div>
+                    <div class="ui-field">
+                        <label class="ui-label" for="ssl-email">ایمیل مدیر (اختیاری):</label>
+                        <input class="ui-input ui-ltr" type="email" name="email" id="ssl-email" placeholder="admin@example.com">
+                    </div>
+                    <div class="ui-field">
+                        <label class="ui-label" for="ssl-days">مدت اعتبار (به روز):</label>
+                        <input class="ui-input ui-ltr" type="number" name="days" id="ssl-days" value="365" required>
+                    </div>
+                    <button type="submit" class="ui-btn ui-btn--primary ui-btn--block">تولید فوری گواهی SSL</button>
+                </form>
+            <?php else: ?>
 
-            <h4>3. درخواست امضای گواهی (CSR)</h4>
-            <p style="font-size: 0.8em; color: #64748b;">این کد معمولاً نیازی به نصب ندارد و صرفاً جهت اطلاع شما نمایش داده شده است.</p>
-            <div class="code-block"><?= htmlspecialchars($sslData['csr']) ?></div>
+                <div class="ui-stack">
+                    <div class="ui-alert ui-alert--success">
+                        <div>
+                            <strong>✅ گواهی با موفقیت تولید شد!</strong><br>
+                            اطلاعات زیر به صورت کاملاً آفلاین در سرور شما (بدون ارسال به هیچ API) ایجاد شده است.
+                        </div>
+                    </div>
 
-            <a href="?" class="btn" style="text-align: center; display: block; text-decoration: none; margin-top: 20px;">ساخت گواهی جدید</a>
+                    <section class="ui-stack">
+                        <h3>1. کلید خصوصی (Private Key)</h3>
+                        <p class="ui-hint">این کلید محرمانه است و برای نصب در وب‌سرور الزامی است.</p>
+                        <pre class="ui-code-block"><?= htmlspecialchars($sslData['key']) ?></pre>
+                    </section>
+
+                    <section class="ui-stack">
+                        <h3>2. گواهی صادر شده (Certificate - CRT)</h3>
+                        <p class="ui-hint">این گواهی را در بخش Certificate هاست خود وارد کنید.</p>
+                        <pre class="ui-code-block"><?= htmlspecialchars($sslData['crt']) ?></pre>
+                    </section>
+
+                    <section class="ui-stack">
+                        <h3>3. درخواست امضای گواهی (CSR)</h3>
+                        <p class="ui-hint">این کد معمولاً نیازی به نصب ندارد و صرفاً جهت اطلاع شما نمایش داده شده است.</p>
+                        <pre class="ui-code-block"><?= htmlspecialchars($sslData['csr']) ?></pre>
+                    </section>
+
+                    <a href="?" class="ui-btn ui-btn--secondary ui-btn--block">ساخت گواهی جدید</a>
+                </div>
+
+            <?php endif; ?>
         </div>
+    </section>
+</main>
 
-    <?php endif; ?>
-</div>
-
-</body>
-</html>
+<?php require_once 'footer.php'; ?>
