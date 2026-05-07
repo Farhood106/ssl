@@ -1,13 +1,31 @@
 <script>
 (function(){
-  // --- Theme Toggle Logic ---
-  const themeToggle = document.getElementById('themeToggle');
-  const sunIcon = document.querySelector('.hdr-sun-icon');
-  const moonIcon = document.querySelector('.hdr-moon-icon');
-  const rootElement = document.documentElement;
+  var rootElement = document.documentElement;
 
-  // Icon sync function based on current state
+  function getStoredTheme() {
+    try {
+      return localStorage.getItem('theme');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setStoredTheme(theme) {
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (e) {}
+  }
+
+  function getCurrentTheme() {
+    return rootElement && rootElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+
   function updateIcons(theme) {
+    var sunIcon = document.querySelector('.hdr-sun-icon');
+    var moonIcon = document.querySelector('.hdr-moon-icon');
+
+    if (!sunIcon || !moonIcon) return;
+
     if (theme === 'dark') {
       sunIcon.style.display = 'block';
       moonIcon.style.display = 'none';
@@ -17,43 +35,62 @@
     }
   }
 
-  // Initial Sync
-  updateIcons(localStorage.getItem('theme'));
+  updateIcons(getStoredTheme() || getCurrentTheme());
 
-  // Toggle Action
-  themeToggle.addEventListener('click', function() {
-    const currentTheme = rootElement.getAttribute('data-theme');
-    if (currentTheme === 'dark') {
-      rootElement.removeAttribute('data-theme');
-      localStorage.setItem('theme', 'light');
-      updateIcons('light');
-    } else {
-      rootElement.setAttribute('data-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
-      updateIcons('dark');
+  var themeToggle = document.getElementById('themeToggle');
+  if (themeToggle && rootElement) {
+    themeToggle.addEventListener('click', function() {
+      var currentTheme = getCurrentTheme();
+
+      if (currentTheme === 'dark') {
+        rootElement.removeAttribute('data-theme');
+        setStoredTheme('light');
+        updateIcons('light');
+      } else {
+        rootElement.setAttribute('data-theme', 'dark');
+        setStoredTheme('dark');
+        updateIcons('dark');
+      }
+    });
+  }
+
+  function closeDrawer(){
+    var burger = document.getElementById('hdrBurger');
+    var drawer = document.getElementById('hdrDrawer');
+
+    if (burger) {
+      burger.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
     }
-  });
 
-  // --- Mobile Menu Logic ---
+    if (drawer) {
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+  }
+
   function sslProToggleMenu(){
     var burger = document.getElementById('hdrBurger');
     var drawer = document.getElementById('hdrDrawer');
-    if(!burger||!drawer) return;
+    if (!burger || !drawer) return;
+
     var isOpen = burger.classList.toggle('is-open');
     drawer.classList.toggle('is-open', isOpen);
-    burger.setAttribute('aria-expanded', isOpen);
-    drawer.setAttribute('aria-hidden', !isOpen);
+    burger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    drawer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
   }
   window.sslProToggleMenu = sslProToggleMenu;
 
-  // Close drawer on outside click
   document.addEventListener('click', function(e){
     var hdr = document.getElementById('siteHeader');
-    if(hdr && !hdr.contains(e.target)){
-      var burger = document.getElementById('hdrBurger');
-      var drawer = document.getElementById('hdrDrawer');
-      if(burger){ burger.classList.remove('is-open'); burger.setAttribute('aria-expanded','false'); }
-      if(drawer){ drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden','true'); }
+    if (hdr && !hdr.contains(e.target)) {
+      closeDrawer();
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') {
+      closeDrawer();
     }
   });
 })();
