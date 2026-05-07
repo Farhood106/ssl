@@ -47,6 +47,36 @@ $statusMap = [
     'no_ssl'   => ['label'=>'SSL ندارد',               'color'=>'#94a3b8','icon'=>'🔓'],
 ];
 $s = $result ? ($statusMap[$result['status']] ?? $statusMap['no_ssl']) : null;
+$hasCertificateDetails = $result
+    && isset(
+        $result['cn'],
+        $result['ca_info'],
+        $result['cert_types'],
+        $result['revocation'],
+        $result['key_info'],
+        $result['sans'],
+        $result['chain'],
+        $result['days_total'],
+        $result['days_left'],
+        $result['used_days'],
+        $result['percent'],
+        $result['issuer_o'],
+        $result['issuer_cn'],
+        $result['valid_from'],
+        $result['valid_to'],
+        $result['subject_o'],
+        $result['serial'],
+        $result['fingerprint'],
+        $result['fingerprint1'],
+        $result['chain_count'],
+        $result['verified']
+    )
+    && is_array($result['ca_info'])
+    && is_array($result['cert_types'])
+    && is_array($result['revocation'])
+    && is_array($result['key_info'])
+    && is_array($result['sans'])
+    && is_array($result['chain']);
 
 // مشخص کردن آیتم فعال در منو و فراخوانی هدر
 $currentPage = 'index';
@@ -129,11 +159,11 @@ require_once 'header.php';
 
   <?php if ($result): ?>
 
-    <?php if ($result['status'] === 'no_ssl'): ?>
+    <?php if (!$hasCertificateDetails): ?>
       <div class="result-card">
         <div class="no-ssl-box">
-          <div class="big-icon">🔓</div>
-          <h2>SSL یافت نشد</h2>
+          <div class="big-icon"><?= ($result['status'] ?? '') === 'no_ssl' ? '🔓' : ($s['icon'] ?? '⚠️') ?></div>
+          <h2><?= ($result['status'] ?? '') === 'no_ssl' ? 'SSL یافت نشد' : htmlspecialchars($s['label'] ?? 'خطا در بررسی SSL') ?></h2>
           <p><?= htmlspecialchars($result['error'] ?? $result['message'] ?? '') ?></p>
         </div>
       </div>

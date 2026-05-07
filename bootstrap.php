@@ -5,6 +5,10 @@ if (!defined('APP_BOOTSTRAPPED')) {
     define('APP_BOOTSTRAPPED', true);
 
     // Core runtime
+    define('APP_DEBUG', false);
+    error_reporting(E_ALL);
+    ini_set('display_errors', APP_DEBUG ? '1' : '0');
+    ini_set('log_errors', '1');
     date_default_timezone_set('UTC');
 
     // Feature flags
