@@ -565,14 +565,14 @@ require_once 'header.php';
 
   <section class="ssl-intel-hero">
     <div class="ssl-hero-copy">
-      <span class="ssl-eyebrow">SSL Intelligence Dashboard</span>
-      <h1>مرکز تحلیل امنیت SSL دامنه</h1>
-      <p>دامنه را وارد کنید و یک گزارش عملیاتی از اعتبار، زنجیره اعتماد، SAN، صادرکننده، اثرانگشت‌ها و وضعیت ریسک SSL دریافت کنید.</p>
+      <span class="ssl-eyebrow">داشبورد هوشمند SSL</span>
+      <h1>مرکز پایش و تحلیل امنیت SSL</h1>
+      <p>دامنه را وارد کنید تا گزارشی دقیق از اعتبار گواهی، مسیر اعتماد Chain، پوشش SAN، Issuer، اثرانگشت‌ها و ریسک SSL دریافت کنید.</p>
 
       <div class="ssl-hero-pills" aria-label="قابلیت‌های داشبورد">
-        <span>Real-time Check</span>
-        <span>Chain Analysis</span>
-        <span>SAN Coverage</span>
+        <span>وارسی لحظه‌ای</span>
+        <span>تحلیل Chain</span>
+        <span>پوشش SAN</span>
         <span>JSON API</span>
       </div>
     </div>
@@ -587,15 +587,15 @@ require_once 'header.php';
   <section class="ssl-scan-console">
     <div class="ssl-console-header">
       <div>
-        <span class="ssl-console-label">Run SSL Scan</span>
-        <h2>اسکن دامنه</h2>
+        <span class="ssl-console-label">وارسی SSL</span>
+        <h2>وارسی دامنه</h2>
       </div>
-      <span class="ssl-console-badge">Port-aware</span>
+      <span class="ssl-console-badge">سازگار با Port</span>
     </div>
 
     <form method="post" autocomplete="off" class="ssl-console-form">
       <label class="ssl-console-input ssl-console-input--domain" for="ssl-check-domain">
-        <span>Domain / Hostname</span>
+        <span>دامنه / Hostname</span>
         <input type="text" name="domain" id="ssl-check-domain"
                placeholder="example.com یا sub.example.ir"
                value="<?= htmlspecialchars($queryDomain) ?>" autofocus>
@@ -607,7 +607,7 @@ require_once 'header.php';
                placeholder="443" value="<?= $port ?>" min="1" max="65535">
       </label>
 
-      <button type="submit" class="ssl-scan-button">Run Intelligence Scan</button>
+      <button type="submit" class="ssl-scan-button">شروع وارسی SSL</button>
     </form>
 
     <div class="ssl-console-examples">
@@ -641,14 +641,14 @@ require_once 'header.php';
           <div class="ssl-status-score">
             <div class="ssl-status-icon"><?= $s['icon'] ?></div>
             <div>
-              <span>Overall SSL Status</span>
+              <span>وضعیت کلی SSL</span>
               <strong><?= $s['label'] ?></strong>
             </div>
           </div>
 
           <div class="ssl-status-meta">
             <div>
-              <span>Domain</span>
+              <span>دامنه</span>
               <strong class="ui-ltr">
                 <?= htmlspecialchars($result['domain']) ?><?php if ($result['port'] != 443): ?>:<?= $result['port'] ?><?php endif; ?>
               </strong>
@@ -658,7 +658,7 @@ require_once 'header.php';
               <strong><?= $ca['logo'] ?> <?= htmlspecialchars($ca['name']) ?></strong>
             </div>
             <div>
-              <span>Days Left</span>
+              <span>روز باقی‌مانده</span>
               <strong><?= $result['days_left'] ?></strong>
             </div>
           </div>
@@ -668,7 +668,7 @@ require_once 'header.php';
           <article class="ssl-kpi-card">
             <span class="ssl-kpi-label">Common Name</span>
             <strong class="ui-ltr"><?= htmlspecialchars($result['cn']) ?></strong>
-            <small>Certificate identity</small>
+            <small>هویت گواهی</small>
           </article>
 
           <article class="ssl-kpi-card">
@@ -678,15 +678,15 @@ require_once 'header.php';
           </article>
 
           <article class="ssl-kpi-card">
-            <span class="ssl-kpi-label">Key</span>
+            <span class="ssl-kpi-label">کلید</span>
             <strong class="ui-ltr"><?= $key['algo'] ?><?php if ($key['bits']): ?> / <?= $key['bits'] ?> bit<?php endif; ?></strong>
             <?php if ($key['sig']): ?><small class="ui-ltr"><?= $key['sig'] ?></small><?php endif; ?>
           </article>
 
           <article class="ssl-kpi-card">
-            <span class="ssl-kpi-label">Coverage / Chain</span>
+            <span class="ssl-kpi-label">پوشش / Chain</span>
             <strong><?= count($result['sans']) ?> SAN</strong>
-            <small><?= $result['chain_count'] ?> cert در زنجیره</small>
+            <small><?= $result['chain_count'] ?> گواهی در Chain</small>
           </article>
         </section>
 
@@ -695,7 +695,7 @@ require_once 'header.php';
             <section class="ssl-panel ssl-lifecycle-panel">
               <header class="ssl-panel__header">
                 <div>
-                  <span>Lifecycle</span>
+                  <span>چرخه عمر</span>
                   <h2>چرخه اعتبار گواهی</h2>
                 </div>
                 <strong style="color:<?= $s['color'] ?>"><?= $result['days_left'] ?> روز باقی‌مانده</strong>
@@ -724,8 +724,8 @@ require_once 'header.php';
             <section class="ssl-panel ssl-domain-panel">
               <header class="ssl-panel__header">
                 <div>
-                  <span>Domain Coverage</span>
-                  <h2>SAN / Subject Alternative Names</h2>
+                  <span>پوشش دامنه</span>
+                  <h2>SAN / نام‌های جایگزین دامنه</h2>
                 </div>
                 <strong><?= count($result['sans']) ?></strong>
               </header>
@@ -748,14 +748,14 @@ require_once 'header.php';
             <section class="ssl-panel ssl-ident-panel">
               <header class="ssl-panel__header">
                 <div>
-                  <span>Identifiers</span>
+                  <span>شناسه‌ها</span>
                   <h2>شناسه‌ها و اثرانگشت‌ها</h2>
                 </div>
               </header>
 
               <div class="ssl-panel__body ssl-fingerprint-list">
                 <div class="ssl-fingerprint-row">
-                  <span>Serial Number</span>
+                  <span>شماره سریال</span>
                   <code class="ui-ltr"><?= htmlspecialchars($result['serial']) ?></code>
                 </div>
                 <div class="ssl-fingerprint-row">
@@ -777,10 +777,10 @@ require_once 'header.php';
             <section class="ssl-panel ssl-chain-panel">
               <header class="ssl-panel__header">
                 <div>
-                  <span>Trust Path</span>
+                  <span>مسیر اعتماد</span>
                   <h2>زنجیره اعتماد</h2>
                 </div>
-                <strong><?= $result['chain_count'] ?> cert</strong>
+                <strong><?= $result['chain_count'] ?> گواهی</strong>
               </header>
 
               <div class="ssl-panel__body ssl-chain-timeline">
@@ -811,8 +811,8 @@ require_once 'header.php';
             <section class="ssl-panel ssl-revocation-panel">
               <header class="ssl-panel__header">
                 <div>
-                  <span>Revocation</span>
-                  <h2>اطلاعات ابطال</h2>
+                  <span>وضعیت ابطال</span>
+                  <h2>جزئیات ابطال گواهی</h2>
                 </div>
               </header>
 
@@ -833,7 +833,7 @@ require_once 'header.php';
             <section class="ssl-panel ssl-action-panel">
               <header class="ssl-panel__header">
                 <div>
-                  <span>Export</span>
+                  <span>خروجی و اشتراک‌گذاری</span>
                   <h2>اشتراک‌گذاری و API</h2>
                 </div>
               </header>
@@ -845,9 +845,9 @@ require_once 'header.php';
                 </div>
 
                 <div class="ssl-api-snippet">
-                  <span>JSON endpoint</span>
+                  <span>مسیر JSON API</span>
                   <code class="ui-ltr">?d=<?= htmlspecialchars($result['domain']) ?>&amp;port=<?= $result['port'] ?>&amp;api</code>
-                  <a class="ui-ltr" href="?d=<?= urlencode($result['domain']) ?>&port=<?= $result['port'] ?>&api" target="_blank" rel="noopener noreferrer">Open API</a>
+                  <a class="ui-ltr" href="?d=<?= urlencode($result['domain']) ?>&port=<?= $result['port'] ?>&api" target="_blank" rel="noopener noreferrer">باز کردن JSON API</a>
                 </div>
               </div>
             </section>
