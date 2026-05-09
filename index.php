@@ -84,89 +84,91 @@ require_once 'header.php';
 ?>
 
 <style>
-/* استایل‌های اختصاصی بخش اشتراک‌گذاری */
-.share-box {
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 8px;
-    padding: 15px;
-    margin-top: 25px;
-    text-align: center;
-}
-.share-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #475569;
-    margin-bottom: 10px;
-    display: block;
-}
-.share-input-group {
+.ssl-checker-search { margin-bottom: var(--ui-space-8); }
+.ssl-checker-search .search-row { align-items: end; }
+.ssl-search-domain { flex: 1 1 320px; }
+.ssl-search-port { flex: 0 0 120px; }
+.ssl-search-action { flex: 0 0 auto; }
+.ssl-result-card { margin-bottom: var(--ui-space-6); }
+.ssl-status-banner {
     display: flex;
-    gap: 10px;
-    max-width: 500px;
-    margin: 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-4);
+    flex-wrap: wrap;
+    padding: var(--ui-space-5) var(--ui-space-6);
+    border-bottom: 1px solid var(--ui-border);
 }
-.share-input-group input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    direction: ltr;
-    color: #64748b;
-    background: #fff;
+.ssl-status-main {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-3);
+    font-weight: 800;
 }
-.share-input-group button {
-    background: #10b981;
-    color: #fff;
-    border: none;
-    padding: 0 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 0.85rem;
-    transition: 0.2s;
+.ssl-section-count { color: var(--ui-primary); }
+.ssl-chain-card { padding: 0; margin-bottom: var(--ui-space-5); overflow: hidden; }
+.ssl-share-panel { margin-top: var(--ui-space-6); box-shadow: none; }
+.ssl-share-control {
+    display: flex;
+    align-items: stretch;
+    gap: var(--ui-space-3);
 }
-.share-input-group button:hover {
-    background: #059669;
+.ssl-share-control .ui-input { flex: 1; }
+.ssl-api-bar a,
+.ssl-tech-value { direction: ltr; text-align: left; }
+@media (max-width: 560px) {
+    .ssl-search-port,
+    .ssl-search-action { flex: 1 1 100%; }
+    .ssl-search-action .ui-btn { width: 100%; }
+    .ssl-share-control { flex-direction: column; }
 }
 </style>
 
-<div class="wrap">
+<main class="wrap">
 
-  <div class="page-header">
+  <section class="page-header ssl-checker-hero">
     <h1>🔐 SSL Checker Pro</h1>
-    <p>بررسی کامل گواهی SSL — پشتیبانی از Sectigo، Certum (سرتوم)، Let's Encrypt، DigiCert، Wildcard و همه CA‌های معروف</p>
-  </div>
+    <p>بررسی سریع و کامل گواهی SSL، زنجیره اعتماد، تاریخ اعتبار، SAN، صادرکننده و وضعیت امنیتی دامنه.</p>
+  </section>
 
-  <div class="search-box">
-    <form method="post" autocomplete="off">
-      <div class="search-row">
-        <input type="text" name="domain"
-               placeholder="example.com یا sub.example.ir"
-               value="<?= htmlspecialchars($queryDomain) ?>" autofocus>
-        <input type="number" name="port" class="port-input"
-               placeholder="Port" value="<?= $port ?>" min="1" max="65535">
-        <button type="submit">🔍 بررسی SSL</button>
+  <section class="ui-card ssl-checker-search">
+    <div class="ui-card__body ui-stack">
+      <form method="post" autocomplete="off" class="ui-stack">
+        <div class="search-row">
+          <div class="ui-field ssl-search-domain">
+            <label class="ui-label" for="ssl-check-domain">دامنه یا زیردامنه</label>
+            <input class="ui-input ui-ltr" type="text" name="domain" id="ssl-check-domain"
+                   placeholder="example.com یا sub.example.ir"
+                   value="<?= htmlspecialchars($queryDomain) ?>" autofocus>
+          </div>
+          <div class="ui-field ssl-search-port">
+            <label class="ui-label" for="ssl-check-port">Port</label>
+            <input class="ui-input ui-ltr" type="number" name="port" id="ssl-check-port"
+                   placeholder="Port" value="<?= $port ?>" min="1" max="65535">
+          </div>
+          <div class="ui-field ssl-search-action">
+            <button type="submit" class="ui-btn ui-btn--primary">🔍 بررسی SSL</button>
+          </div>
+        </div>
+      </form>
+      <div class="hint">
+        نمونه: <code>google.com</code> &nbsp;|&nbsp;
+        <code>mail.example.ir</code> &nbsp;|&nbsp;
+        <code>api.example.com:8443</code>
       </div>
-    </form>
-    <div class="hint">
-      نمونه: <code>google.com</code> &nbsp;|&nbsp;
-      <code>mail.example.ir</code> &nbsp;|&nbsp;
-      <code>api.example.com:8443</code>
     </div>
-  </div>
+  </section>
 
   <?php if ($result): ?>
 
     <?php if (!$hasCertificateDetails): ?>
-      <div class="result-card">
+      <section class="ui-card result-card">
         <div class="no-ssl-box">
           <div class="big-icon"><?= ($result['status'] ?? '') === 'no_ssl' ? '🔓' : ($s['icon'] ?? '⚠️') ?></div>
           <h2><?= ($result['status'] ?? '') === 'no_ssl' ? 'SSL یافت نشد' : htmlspecialchars($s['label'] ?? 'خطا در بررسی SSL') ?></h2>
           <p><?= htmlspecialchars($result['error'] ?? $result['message'] ?? '') ?></p>
         </div>
-      </div>
+      </section>
 
     <?php else:
       $ca    = $result['ca_info'];
@@ -175,22 +177,23 @@ require_once 'header.php';
       $key   = $result['key_info'];
     ?>
 
-      <div class="result-card">
+      <section class="ui-card result-card ssl-result-card">
 
         <!-- نوار وضعیت دینامیک -->
-        <div class="status-bar" style="background:<?= $s['color'] ?>15; color:<?= $s['color'] ?>">
-          <span class="status-icon"><?= $s['icon'] ?></span>
-          <span><?= $s['label'] ?></span>
+        <header class="ssl-status-banner status-bar" style="background:<?= $s['color'] ?>15; color:<?= $s['color'] ?>">
+          <div class="ssl-status-main">
+            <span class="status-icon"><?= $s['icon'] ?></span>
+            <span><?= $s['label'] ?></span>
+          </div>
           <span class="ca-badge"
                 style="color:<?=$ca['color']?>;border-color:<?=$ca['color']?>30;background:<?=$ca['color']?>15">
             <?= $ca['logo'] ?> <?= htmlspecialchars($ca['name']) ?>
           </span>
-        </div>
+        </header>
 
-        <div class="result-body">
+        <div class="ui-card__body ui-stack result-body">
 
-          <!-- ... (سایر بخش‌های اطلاعات گواهی دقیقاً مشابه قبل) ... -->
-          <div class="types-row">
+          <div class="types-row ui-cluster">
             <?php foreach ($types as $t): ?>
             <span class="type-badge"
                   style="color:<?=$t['color']?>;border-color:<?=$t['color']?>40;background:<?=$t['color']?>10">
@@ -212,7 +215,11 @@ require_once 'header.php';
                 &nbsp;(<?= $result['percent'] ?>%)
               </span>
             </div>
-            <div class="progress-track">
+            <div class="progress-track"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 aria-valuenow="<?= (int)$result['percent'] ?>">
               <div class="progress-bar"
                    style="width:<?=$result['percent']?>%;background:<?=$s['color']?>"></div>
             </div>
@@ -223,7 +230,7 @@ require_once 'header.php';
 
             <div class="item">
               <div class="item-label">دامنه بررسی شده</div>
-              <div class="item-value"><?= htmlspecialchars($result['domain']) ?>
+              <div class="item-value ui-ltr"><?= htmlspecialchars($result['domain']) ?>
                 <?php if ($result['port'] != 443): ?>
                   <span style="opacity: 0.6">:<?= $result['port'] ?></span>
                 <?php endif; ?>
@@ -232,7 +239,7 @@ require_once 'header.php';
 
             <div class="item">
               <div class="item-label">Common Name (CN)</div>
-              <div class="item-value"><?= htmlspecialchars($result['cn']) ?></div>
+              <div class="item-value ui-ltr"><?= htmlspecialchars($result['cn']) ?></div>
             </div>
 
             <div class="item">
@@ -244,17 +251,17 @@ require_once 'header.php';
 
             <div class="item">
               <div class="item-label">Issuer CN</div>
-              <div class="item-value"><?= htmlspecialchars($result['issuer_cn']) ?></div>
+              <div class="item-value ui-ltr"><?= htmlspecialchars($result['issuer_cn']) ?></div>
             </div>
 
             <div class="item">
               <div class="item-label">تاریخ شروع</div>
-              <div class="item-value"><?= $result['valid_from'] ?></div>
+              <div class="item-value ui-ltr"><?= $result['valid_from'] ?></div>
             </div>
 
             <div class="item">
               <div class="item-label">تاریخ انقضا</div>
-              <div class="item-value" style="color:<?= $s['color'] ?>">
+              <div class="item-value ui-ltr" style="color:<?= $s['color'] ?>">
                 <?= $result['valid_to'] ?>
               </div>
             </div>
@@ -275,7 +282,7 @@ require_once 'header.php';
 
             <div class="item">
               <div class="item-label">الگوریتم کلید</div>
-              <div class="item-value">
+              <div class="item-value ui-ltr">
                 <?= $key['algo'] ?>
                 <?php if ($key['bits']): ?> — <?= $key['bits'] ?> bit<?php endif; ?>
                 <?php if ($key['sig']): ?>
@@ -298,16 +305,16 @@ require_once 'header.php';
           <div class="grid">
             <div class="item full">
               <div class="item-label">Serial Number</div>
-              <div class="item-value mono"><?= htmlspecialchars($result['serial']) ?></div>
+              <div class="item-value mono ui-ltr"><?= htmlspecialchars($result['serial']) ?></div>
             </div>
             <div class="item full">
               <div class="item-label">SHA-256 Fingerprint</div>
-              <div class="item-value mono"><?= htmlspecialchars($result['fingerprint']) ?></div>
+              <div class="item-value mono ui-ltr"><?= htmlspecialchars($result['fingerprint']) ?></div>
             </div>
             <?php if ($result['fingerprint1']): ?>
             <div class="item full">
               <div class="item-label">SHA-1 Fingerprint</div>
-              <div class="item-value mono"><?= htmlspecialchars($result['fingerprint1']) ?></div>
+              <div class="item-value mono ui-ltr"><?= htmlspecialchars($result['fingerprint1']) ?></div>
             </div>
             <?php endif; ?>
           </div>
@@ -315,7 +322,7 @@ require_once 'header.php';
           <?php if (!empty($result['sans'])): ?>
           <div class="section-title">
             دامنه‌های گواهی — Subject Alternative Names
-            <span style="color:#2563eb">(<?= count($result['sans']) ?>)</span>
+            <span class="ssl-section-count">(<?= count($result['sans']) ?>)</span>
           </div>
           <div class="item full" style="margin-bottom:20px">
             <div class="sans-list">
@@ -323,7 +330,7 @@ require_once 'header.php';
                 $isWild = str_starts_with($san, '*.');
                 $isMain = (strtolower($san) === strtolower($result['domain']));
               ?>
-                <span class="san-tag <?= $isWild ? 'wildcard' : ($isMain ? 'main' : '') ?>">
+                <span class="san-tag ui-ltr <?= $isWild ? 'wildcard' : ($isMain ? 'main' : '') ?>">
                   <?= $isWild ? '✳️ ' : '' ?><?= htmlspecialchars($san) ?>
                 </span>
               <?php endforeach; ?>
@@ -336,17 +343,17 @@ require_once 'header.php';
           <div class="rev-row" style="margin-bottom:20px">
             <?php if ($rev['ocsp']): ?>
             <span class="rev-link">
-              🔎 OCSP: <a href="<?= htmlspecialchars($rev['ocsp']) ?>" target="_blank"><?= htmlspecialchars($rev['ocsp']) ?></a>
+              🔎 OCSP: <a class="ui-ltr" href="<?= htmlspecialchars($rev['ocsp']) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($rev['ocsp']) ?></a>
             </span>
             <?php endif; ?>
             <?php if ($rev['crl']): ?>
             <span class="rev-link">
-              📋 CRL: <a href="<?= htmlspecialchars($rev['crl']) ?>" target="_blank"><?= htmlspecialchars($rev['crl']) ?></a>
+              📋 CRL: <a class="ui-ltr" href="<?= htmlspecialchars($rev['crl']) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($rev['crl']) ?></a>
             </span>
             <?php endif; ?>
             <?php if ($rev['ca_issuers']): ?>
             <span class="rev-link">
-              🏛️ CA Issuers: <a href="<?= htmlspecialchars($rev['ca_issuers']) ?>" target="_blank"><?= htmlspecialchars($rev['ca_issuers']) ?></a>
+              🏛️ CA Issuers: <a class="ui-ltr" href="<?= htmlspecialchars($rev['ca_issuers']) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($rev['ca_issuers']) ?></a>
             </span>
             <?php endif; ?>
           </div>
@@ -354,7 +361,7 @@ require_once 'header.php';
 
           <?php if (!empty($result['chain'])): ?>
           <div class="section-title">زنجیره گواهی — Certificate Chain</div>
-          <div class="item full" style="padding:0;margin-bottom:20px;overflow:hidden">
+          <div class="item full ssl-chain-card">
             <div class="chain">
               <?php foreach ($result['chain'] as $c):
                 $cc = $c['ca_info']; ?>
@@ -367,7 +374,7 @@ require_once 'header.php';
                   <div class="chain-connector"></div>
                 </div>
                 <div class="chain-body">
-                  <div class="chain-cn">
+                  <div class="chain-cn ui-ltr">
                     <?php if ($c['is_root']): ?>
                       <span class="root-badge">ROOT</span>
                     <?php endif; ?>
@@ -376,8 +383,8 @@ require_once 'header.php';
                   <?php if ($c['o']): ?>
                   <div class="chain-o"><?= $cc['logo'] ?> <?= htmlspecialchars($c['o']) ?></div>
                   <?php endif; ?>
-                  <div class="chain-issuer">صادر شده توسط: <?= htmlspecialchars($c['issuer']) ?></div>
-                  <div class="chain-date"><?= $c['from'] ?> → <?= $c['to'] ?></div>
+                  <div class="chain-issuer">صادر شده توسط: <span class="ui-ltr"><?= htmlspecialchars($c['issuer']) ?></span></div>
+                  <div class="chain-date ui-ltr"><?= $c['from'] ?> → <?= $c['to'] ?></div>
                 </div>
               </div>
               <?php endforeach; ?>
@@ -386,47 +393,50 @@ require_once 'header.php';
           <?php endif; ?>
 
           <!-- ── بخش جدید: اشتراک‌گذاری نتیجه ── -->
-          <div class="share-box">
-              <span class="share-title">🔗 نتیجه بررسی برای <?= htmlspecialchars($result['domain']) ?> را به اشتراک بگذارید:</span>
-              <div class="share-input-group">
-                  <input type="text" id="shareLinkInput" value="<?= $shareUrl ?>" readonly onclick="this.select()">
-                  <button type="button" id="copyShareBtn" onclick="copyShareLink()">📋 کپی لینک</button>
+          <section class="ui-card ssl-share-panel">
+            <div class="ui-card__body ui-stack">
+              <strong>🔗 نتیجه بررسی برای <?= htmlspecialchars($result['domain']) ?> را به اشتراک بگذارید:</strong>
+              <div class="ssl-share-control">
+                <input class="ui-input ui-ltr" type="text" id="shareLinkInput" value="<?= $shareUrl ?>" readonly onclick="this.select()">
+                <button type="button" class="ui-btn ui-btn--accent" id="copyShareBtn" onclick="copyShareLink()">📋 کپی لینک</button>
               </div>
-              <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 8px;">از طریق لینک بالا می‌توانید نتیجه بررسی زنده را با دیگران به اشتراک بگذارید.</p>
-          </div>
+              <p class="ui-hint">از طریق لینک بالا می‌توانید نتیجه بررسی زنده را با دیگران به اشتراک بگذارید.</p>
+            </div>
+          </section>
 
-          <div class="api-bar" style="margin-top: 15px;">
+          <div class="api-bar ssl-api-bar" style="margin-top: 15px;">
             <span>📡 خروجی JSON API:</span>
-            <a href="?d=<?= urlencode($result['domain']) ?>&port=<?= $result['port'] ?>&api" target="_blank">
+            <a class="ui-ltr" href="?d=<?= urlencode($result['domain']) ?>&port=<?= $result['port'] ?>&api" target="_blank" rel="noopener noreferrer">
               ?d=<?= htmlspecialchars($result['domain']) ?>&amp;port=<?= $result['port'] ?>&amp;api
             </a>
           </div>
 
         </div>
-      </div>
+      </section>
 
     <?php endif; ?>
   <?php endif; ?>
 
-</div>
+</main>
 
 <script>
 // تابع کپی لینک اشتراک‌گذاری
 function copyShareLink() {
     let copyText = document.getElementById("shareLinkInput");
     let btn = document.getElementById("copyShareBtn");
-    
+    if (!copyText || !btn) return;
+
     copyText.select();
     copyText.setSelectionRange(0, 99999); // برای موبایل
     document.execCommand("copy");
-    
+
     // تغییر موقت دکمه به حالت موفقیت
     let originalText = btn.innerHTML;
     let originalBg = btn.style.background;
-    
+
     btn.innerHTML = "✅ کپی شد!";
     btn.style.background = "#059669";
-    
+
     setTimeout(function() {
         btn.innerHTML = originalText;
         btn.style.background = originalBg;
