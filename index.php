@@ -85,123 +85,68 @@ require_once 'header.php';
 
 <style>
 .ssl-intel-page {
-    position: relative;
+    display: grid;
+    gap: var(--ui-space-6);
 }
 .ssl-intel-hero {
-    position: relative;
-    overflow: hidden;
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(260px, .75fr);
-    gap: clamp(1.5rem, 4vw, 3rem);
-    align-items: center;
-    padding: clamp(1.5rem, 4vw, 3rem);
-    margin-bottom: var(--ui-space-8);
-    border: 1px solid var(--ui-border);
-    border-radius: var(--ui-radius-xl);
-    background:
-        radial-gradient(circle at 15% 10%, var(--ui-primary-soft), transparent 28rem),
-        radial-gradient(circle at 85% 20%, var(--ui-accent-soft), transparent 24rem),
-        linear-gradient(135deg, var(--ui-surface), var(--ui-surface-muted));
-    box-shadow: var(--ui-shadow-card);
+    gap: var(--ui-space-4);
+    max-width: 880px;
+    margin-bottom: var(--ui-space-2);
 }
-.ssl-intel-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(100,116,139,.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(100,116,139,.08) 1px, transparent 1px);
-    background-size: 28px 28px;
-    -webkit-mask-image: radial-gradient(circle at center, #000, transparent 75%);
-    mask-image: radial-gradient(circle at center, #000, transparent 75%);
-    pointer-events: none;
-}
-.ssl-hero-copy,
-.ssl-hero-visual { position: relative; z-index: 1; }
+.ssl-hero-copy { display: grid; gap: var(--ui-space-3); }
 .ssl-eyebrow {
     display: inline-flex;
+    width: fit-content;
     align-items: center;
-    gap: .4rem;
-    margin-bottom: var(--ui-space-4);
-    padding: .35rem .75rem;
+    gap: .45rem;
+    padding: .3rem .7rem;
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-pill);
-    background: var(--ui-primary-soft);
+    background: var(--ui-surface-muted);
     color: var(--ui-primary);
     font-size: var(--ui-text-xs);
     font-weight: 900;
-    letter-spacing: .04em;
-    text-transform: uppercase;
 }
 .ssl-intel-hero h1 {
-    margin: 0 0 var(--ui-space-4);
+    margin: 0;
     color: var(--ui-text);
-    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-size: clamp(1.75rem, 4vw, 3rem);
     font-weight: 950;
-    line-height: 1.05;
-    letter-spacing: -.06em;
+    line-height: 1.18;
+    letter-spacing: -.04em;
 }
 .ssl-intel-hero p {
-    max-width: 680px;
+    max-width: 760px;
+    margin: 0;
     color: var(--ui-text-muted);
-    font-size: clamp(1rem, 2vw, 1.15rem);
+    font-size: clamp(.98rem, 1.6vw, 1.08rem);
     line-height: 1.9;
 }
 .ssl-hero-pills {
     display: flex;
     flex-wrap: wrap;
     gap: var(--ui-space-2);
-    margin-top: var(--ui-space-6);
 }
 .ssl-hero-pills span {
-    padding: .45rem .75rem;
+    padding: .38rem .7rem;
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-pill);
-    background: rgba(255,255,255,.42);
+    background: var(--ui-surface);
     color: var(--ui-text-muted);
     font-size: var(--ui-text-xs);
     font-weight: 800;
 }
-[data-theme="dark"] .ssl-hero-pills span { background: rgba(255,255,255,.045); }
-.ssl-hero-visual {
-    min-height: 280px;
-    display: grid;
-    place-items: center;
-}
-.ssl-orbit {
-    position: absolute;
-    border: 1px solid var(--ui-border);
-    border-radius: 50%;
-    box-shadow: inset 0 0 60px var(--ui-primary-soft);
-}
-.ssl-orbit--one { width: 250px; height: 250px; }
-.ssl-orbit--two { width: 178px; height: 178px; transform: rotate(28deg); border-style: dashed; }
-.ssl-shield-core {
-    position: relative;
-    z-index: 2;
-    width: 124px;
-    height: 124px;
-    display: grid;
-    place-items: center;
-    border-radius: 34px;
-    background: var(--ui-brand-gradient);
-    color: #fff;
-    font-size: 3rem;
-    box-shadow: 0 24px 70px var(--ui-primary-soft);
-}
 .ssl-scan-console,
-.ssl-status-overview,
-.ssl-kpi-card,
-.ssl-panel,
+.ssl-report-shell,
 .ssl-empty-state {
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-xl);
     background: var(--ui-surface);
-    box-shadow: var(--ui-shadow-card);
+    box-shadow: var(--ui-shadow-soft);
 }
 .ssl-scan-console {
     padding: var(--ui-space-6);
-    margin-bottom: var(--ui-space-8);
 }
 .ssl-console-header,
 .ssl-panel__header {
@@ -209,36 +154,40 @@ require_once 'header.php';
     align-items: flex-start;
     justify-content: space-between;
     gap: var(--ui-space-4);
-    margin-bottom: var(--ui-space-5);
 }
+.ssl-console-header { margin-bottom: var(--ui-space-5); }
 .ssl-console-label,
 .ssl-panel__header span,
-.ssl-kpi-label {
+.ssl-kpi-label,
+.ssl-status-score span,
+.ssl-status-meta span,
+.ssl-fingerprint-row span,
+.ssl-api-snippet span {
     display: block;
-    color: var(--ui-primary);
+    color: var(--ui-text-muted);
     font-size: var(--ui-text-xs);
     font-weight: 900;
-    letter-spacing: .04em;
-    text-transform: uppercase;
+    letter-spacing: .035em;
 }
 .ssl-console-header h2,
 .ssl-panel__header h2 {
     margin: .15rem 0 0;
     color: var(--ui-text);
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 900;
 }
 .ssl-console-badge {
-    padding: .35rem .75rem;
+    padding: .35rem .7rem;
+    border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-pill);
-    background: var(--ui-accent-soft);
-    color: var(--ui-accent);
+    background: var(--ui-bg-soft);
+    color: var(--ui-text-muted);
     font-size: var(--ui-text-xs);
-    font-weight: 900;
+    font-weight: 800;
 }
 .ssl-console-form {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 140px auto;
+    grid-template-columns: minmax(0, 1fr) 132px auto;
     gap: var(--ui-space-3);
     align-items: end;
 }
@@ -254,12 +203,12 @@ require_once 'header.php';
 .ssl-console-input input,
 .ssl-share-control input {
     width: 100%;
-    min-height: 3.25rem;
+    min-height: 3rem;
     border: 1px solid var(--ui-border);
-    border-radius: 16px;
+    border-radius: var(--ui-radius-lg);
     background: var(--ui-bg-soft);
     color: var(--ui-text);
-    padding: .85rem 1rem;
+    padding: .8rem .95rem;
     font: inherit;
     direction: ltr;
     text-align: left;
@@ -276,17 +225,20 @@ require_once 'header.php';
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 3.25rem;
+    min-height: 3rem;
     border: 0;
-    border-radius: 16px;
-    background: var(--ui-brand-gradient);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-primary);
     color: #fff;
-    padding: .85rem 1.2rem;
+    padding: .8rem 1rem;
     font-weight: 900;
     cursor: pointer;
     text-decoration: none;
     white-space: nowrap;
 }
+.ssl-scan-button:hover,
+.ssl-share-control button:hover,
+.ssl-api-snippet a:hover { filter: brightness(.96); }
 .ssl-console-examples {
     display: flex;
     flex-wrap: wrap;
@@ -296,67 +248,61 @@ require_once 'header.php';
     font-size: var(--ui-text-sm);
 }
 .ssl-empty-state {
-    padding: clamp(2rem, 5vw, 4rem);
+    padding: clamp(2rem, 5vw, 3rem);
     text-align: center;
 }
 .ssl-empty-state__icon {
-    width: 86px;
-    height: 86px;
+    width: 64px;
+    height: 64px;
     display: grid;
     place-items: center;
-    margin: 0 auto var(--ui-space-5);
-    border-radius: 28px;
-    background: var(--ui-warning-soft);
-    font-size: 2.4rem;
+    margin: 0 auto var(--ui-space-4);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-xl);
+    background: var(--ui-bg-soft);
+    font-size: 2rem;
 }
 .ssl-empty-state h2 { margin-bottom: var(--ui-space-2); color: var(--ui-text); }
 .ssl-empty-state p { color: var(--ui-text-muted); }
 .ssl-report-shell {
-    display: grid;
-    gap: var(--ui-space-6);
+    overflow: hidden;
 }
 .ssl-status-overview {
     --status-color: var(--ui-primary);
     display: grid;
-    grid-template-columns: minmax(240px, .65fr) minmax(0, 1fr);
+    grid-template-columns: minmax(220px, .7fr) minmax(0, 1fr);
     gap: var(--ui-space-5);
+    align-items: center;
     padding: var(--ui-space-6);
-    border-color: var(--ui-border);
-    box-shadow: var(--ui-shadow-card), inset 0 0 0 1px var(--status-color);
-    background:
-        radial-gradient(circle at 10% 10%, var(--ui-primary-soft), transparent 22rem),
-        var(--ui-surface);
+    border-bottom: 1px solid var(--ui-border);
+    background: var(--ui-surface);
 }
 .ssl-status-score {
     display: flex;
     align-items: center;
-    gap: var(--ui-space-4);
+    gap: var(--ui-space-3);
 }
 .ssl-status-icon {
-    width: 76px;
-    height: 76px;
+    width: 54px;
+    height: 54px;
     display: grid;
     place-items: center;
-    border-radius: 24px;
-    background: var(--ui-primary-soft);
+    border: 1px solid var(--ui-border);
+    border-inline-start: 3px solid var(--status-color);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-bg-soft);
     color: var(--status-color);
-    font-size: 2rem;
-}
-.ssl-status-score span,
-.ssl-status-meta span {
-    color: var(--ui-text-muted);
-    font-size: var(--ui-text-xs);
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .04em;
+    font-size: 1.5rem;
 }
 .ssl-status-score strong {
     display: block;
+    margin-top: .25rem;
     color: var(--status-color);
-    font-size: clamp(1.4rem, 3vw, 2.1rem);
-    line-height: 1.2;
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    line-height: 1.3;
 }
-.ssl-status-meta {
+.ssl-status-meta,
+.ssl-kpi-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--ui-space-3);
@@ -367,21 +313,21 @@ require_once 'header.php';
     padding: var(--ui-space-4);
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-lg);
-    background: var(--ui-surface-muted);
+    background: var(--ui-bg-soft);
 }
 .ssl-status-meta strong,
 .ssl-kpi-card strong {
     display: block;
     margin-top: .25rem;
     color: var(--ui-text);
-    font-size: 1rem;
+    font-size: .98rem;
     font-weight: 900;
     overflow-wrap: anywhere;
 }
 .ssl-kpi-grid {
-    display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--ui-space-4);
+    padding: var(--ui-space-6);
+    border-bottom: 1px solid var(--ui-border);
 }
 .ssl-kpi-card small {
     display: block;
@@ -391,34 +337,38 @@ require_once 'header.php';
 }
 .ssl-report-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(300px, .75fr);
-    gap: var(--ui-space-6);
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ui-space-4);
+    padding: var(--ui-space-6);
 }
 .ssl-report-main,
 .ssl-report-aside {
     display: grid;
-    gap: var(--ui-space-6);
+    gap: var(--ui-space-4);
 }
 .ssl-panel {
     overflow: hidden;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
 }
 .ssl-panel__header {
     margin: 0;
-    padding: var(--ui-space-5) var(--ui-space-6);
+    padding: var(--ui-space-4) var(--ui-space-5);
     border-bottom: 1px solid var(--ui-border);
-    background: var(--ui-surface-muted);
+    background: var(--ui-bg-soft);
 }
 .ssl-panel__body {
-    padding: var(--ui-space-6);
+    padding: var(--ui-space-5);
 }
 .ssl-risk-meter {
-    padding: var(--ui-space-4);
+    padding: var(--ui-space-3);
+    border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-lg);
     background: var(--ui-bg-soft);
 }
 .ssl-risk-track {
-    height: 16px;
+    height: 10px;
     overflow: hidden;
     border-radius: var(--ui-radius-pill);
     background: var(--ui-border);
@@ -432,7 +382,7 @@ require_once 'header.php';
     display: flex;
     justify-content: space-between;
     gap: var(--ui-space-3);
-    margin-top: var(--ui-space-4);
+    margin-top: var(--ui-space-3);
     color: var(--ui-text-muted);
     font-size: var(--ui-text-sm);
     flex-wrap: wrap;
@@ -452,7 +402,7 @@ require_once 'header.php';
     display: inline-flex;
     align-items: center;
     max-width: 100%;
-    padding: .45rem .75rem;
+    padding: .38rem .65rem;
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-pill);
     background: var(--ui-bg-soft);
@@ -460,27 +410,21 @@ require_once 'header.php';
     font-size: var(--ui-text-sm);
     overflow-wrap: anywhere;
 }
-.ssl-domain-pill.wildcard { border-color: rgba(124,58,237,.35); background: rgba(124,58,237,.12); color: var(--ui-brand-2); }
-.ssl-domain-pill.main { border-color: rgba(37,99,235,.35); background: var(--ui-primary-soft); color: var(--ui-primary); }
+.ssl-domain-pill.wildcard { border-color: rgba(124,58,237,.28); color: var(--ui-brand-2); }
+.ssl-domain-pill.main { border-color: rgba(37,99,235,.32); color: var(--ui-primary); }
 .ssl-fingerprint-row,
 .ssl-link-item,
 .ssl-chain-node,
 .ssl-api-snippet {
     min-width: 0;
-    padding: var(--ui-space-4);
+    padding: var(--ui-space-3) var(--ui-space-4);
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-lg);
     background: var(--ui-bg-soft);
 }
 .ssl-fingerprint-row span,
 .ssl-api-snippet span {
-    display: block;
     margin-bottom: .35rem;
-    color: var(--ui-text-muted);
-    font-size: var(--ui-text-xs);
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: .04em;
 }
 .ssl-fingerprint-row code,
 .ssl-api-snippet code {
@@ -498,11 +442,11 @@ require_once 'header.php';
 }
 .ssl-chain-index {
     --chain-color: var(--ui-primary);
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     display: grid;
     place-items: center;
-    border: 2px solid var(--chain-color);
+    border: 1px solid var(--chain-color);
     border-radius: 50%;
     color: var(--chain-color);
     font-weight: 900;
@@ -514,7 +458,7 @@ require_once 'header.php';
     overflow-wrap: anywhere;
 }
 .ssl-chain-node__meta {
-    margin-top: .25rem;
+    margin-top: .2rem;
     color: var(--ui-text-muted);
     font-size: var(--ui-text-sm);
     overflow-wrap: anywhere;
@@ -540,22 +484,25 @@ require_once 'header.php';
     font-size: var(--ui-text-sm);
 }
 @media (max-width: 920px) {
-    .ssl-intel-hero,
     .ssl-status-overview,
-    .ssl-report-layout { grid-template-columns: 1fr; }
     .ssl-status-meta,
-    .ssl-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ssl-kpi-grid { grid-template-columns: 1fr 1fr; }
+    .ssl-status-score { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
-    .ssl-intel-hero { padding: var(--ui-space-6); }
-    .ssl-hero-visual { min-height: 190px; }
-    .ssl-orbit--one { width: 190px; height: 190px; }
-    .ssl-orbit--two { width: 132px; height: 132px; }
-    .ssl-shield-core { width: 92px; height: 92px; border-radius: 26px; font-size: 2.25rem; }
+    .ssl-intel-page { gap: var(--ui-space-5); }
+    .ssl-scan-console,
+    .ssl-status-overview,
+    .ssl-kpi-grid,
+    .ssl-report-layout { padding: var(--ui-space-4); }
     .ssl-console-form,
+    .ssl-status-overview,
     .ssl-status-meta,
     .ssl-kpi-grid,
     .ssl-share-control { grid-template-columns: 1fr; }
+    .ssl-status-score { grid-column: auto; }
+    .ssl-console-header,
+    .ssl-panel__header { align-items: flex-start; }
     .ssl-scan-button,
     .ssl-share-control button { width: 100%; }
 }
@@ -575,12 +522,6 @@ require_once 'header.php';
         <span>پوشش SAN</span>
         <span>JSON API</span>
       </div>
-    </div>
-
-    <div class="ssl-hero-visual" aria-hidden="true">
-      <div class="ssl-orbit ssl-orbit--one"></div>
-      <div class="ssl-orbit ssl-orbit--two"></div>
-      <div class="ssl-shield-core">🔐</div>
     </div>
   </section>
 
