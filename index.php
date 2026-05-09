@@ -84,23 +84,22 @@ require_once 'header.php';
 ?>
 
 <style>
-.ssl-intel-page {
+.ssl-checker-page {
     display: grid;
     gap: var(--ui-space-6);
 }
-.ssl-intel-hero {
-    display: grid;
-    gap: var(--ui-space-4);
-    max-width: 880px;
-    margin-bottom: var(--ui-space-2);
+.ssl-page-header {
+    max-width: 860px;
 }
-.ssl-hero-copy { display: grid; gap: var(--ui-space-3); }
-.ssl-eyebrow {
+.ssl-page-copy {
+    display: grid;
+    gap: var(--ui-space-3);
+}
+.ssl-header-kicker {
     display: inline-flex;
     width: fit-content;
     align-items: center;
-    gap: .45rem;
-    padding: .3rem .7rem;
+    padding: .28rem .68rem;
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-pill);
     background: var(--ui-surface-muted);
@@ -108,28 +107,34 @@ require_once 'header.php';
     font-size: var(--ui-text-xs);
     font-weight: 900;
 }
-.ssl-intel-hero h1 {
+.ssl-page-header h1 {
     margin: 0;
     color: var(--ui-text);
-    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-size: clamp(1.7rem, 3.8vw, 2.8rem);
     font-weight: 950;
-    line-height: 1.18;
-    letter-spacing: -.04em;
+    line-height: 1.2;
+    letter-spacing: -.035em;
 }
-.ssl-intel-hero p {
-    max-width: 760px;
+.ssl-page-header p {
+    max-width: 740px;
     margin: 0;
     color: var(--ui-text-muted);
-    font-size: clamp(.98rem, 1.6vw, 1.08rem);
+    font-size: clamp(.98rem, 1.5vw, 1.06rem);
     line-height: 1.9;
 }
-.ssl-hero-pills {
+.ssl-header-tags,
+.ssl-types-row,
+.ssl-domain-cloud {
     display: flex;
     flex-wrap: wrap;
     gap: var(--ui-space-2);
 }
-.ssl-hero-pills span {
-    padding: .38rem .7rem;
+.ssl-header-tags span,
+.ssl-type-chip,
+.ssl-domain-pill {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-pill);
     background: var(--ui-surface);
@@ -137,15 +142,18 @@ require_once 'header.php';
     font-size: var(--ui-text-xs);
     font-weight: 800;
 }
-.ssl-scan-console,
-.ssl-report-shell,
+.ssl-header-tags span {
+    padding: .36rem .68rem;
+}
+.ssl-search-card,
+.ssl-result-card,
 .ssl-empty-state {
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-xl);
     background: var(--ui-surface);
     box-shadow: var(--ui-shadow-soft);
 }
-.ssl-scan-console {
+.ssl-search-card {
     padding: var(--ui-space-6);
 }
 .ssl-console-header,
@@ -155,12 +163,13 @@ require_once 'header.php';
     justify-content: space-between;
     gap: var(--ui-space-4);
 }
-.ssl-console-header { margin-bottom: var(--ui-space-5); }
+.ssl-console-header {
+    margin-bottom: var(--ui-space-5);
+}
 .ssl-console-label,
 .ssl-panel__header span,
-.ssl-kpi-label,
-.ssl-status-score span,
-.ssl-status-meta span,
+.ssl-info-label,
+.ssl-status-main span,
 .ssl-fingerprint-row span,
 .ssl-api-snippet span {
     display: block;
@@ -238,7 +247,9 @@ require_once 'header.php';
 }
 .ssl-scan-button:hover,
 .ssl-share-control button:hover,
-.ssl-api-snippet a:hover { filter: brightness(.96); }
+.ssl-api-snippet a:hover {
+    filter: brightness(.96);
+}
 .ssl-console-examples {
     display: flex;
     flex-wrap: wrap;
@@ -264,59 +275,80 @@ require_once 'header.php';
 }
 .ssl-empty-state h2 { margin-bottom: var(--ui-space-2); color: var(--ui-text); }
 .ssl-empty-state p { color: var(--ui-text-muted); }
-.ssl-report-shell {
+.ssl-result-card {
     overflow: hidden;
 }
-.ssl-status-overview {
+.ssl-status-banner {
     --status-color: var(--ui-primary);
-    display: grid;
-    grid-template-columns: minmax(220px, .7fr) minmax(0, 1fr);
-    gap: var(--ui-space-5);
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-4);
     padding: var(--ui-space-6);
     border-bottom: 1px solid var(--ui-border);
     background: var(--ui-surface);
 }
-.ssl-status-score {
+.ssl-status-main {
     display: flex;
     align-items: center;
     gap: var(--ui-space-3);
+    min-width: 0;
 }
 .ssl-status-icon {
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     display: grid;
     place-items: center;
+    flex: 0 0 auto;
     border: 1px solid var(--ui-border);
     border-inline-start: 3px solid var(--status-color);
     border-radius: var(--ui-radius-lg);
     background: var(--ui-bg-soft);
     color: var(--status-color);
-    font-size: 1.5rem;
+    font-size: 1.45rem;
 }
-.ssl-status-score strong {
+.ssl-status-main strong {
     display: block;
     margin-top: .25rem;
     color: var(--status-color);
-    font-size: clamp(1.15rem, 2vw, 1.5rem);
-    line-height: 1.3;
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    line-height: 1.35;
 }
-.ssl-status-meta,
-.ssl-kpi-grid {
+.ssl-status-domain {
+    min-width: 0;
+    color: var(--ui-text-muted);
+    font-size: var(--ui-text-sm);
+    overflow-wrap: anywhere;
+}
+.ssl-types-row {
+    padding: var(--ui-space-4) var(--ui-space-6) 0;
+}
+.ssl-type-chip {
+    gap: .45rem;
+    padding: .4rem .7rem;
+    background: var(--ui-bg-soft);
+}
+.ssl-type-chip strong {
+    color: var(--ui-text);
+}
+.ssl-type-chip small {
+    color: var(--ui-text-muted);
+}
+.ssl-info-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--ui-space-3);
+    padding: var(--ui-space-6);
+    border-bottom: 1px solid var(--ui-border);
 }
-.ssl-status-meta div,
-.ssl-kpi-card {
+.ssl-info-card {
     min-width: 0;
     padding: var(--ui-space-4);
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-lg);
     background: var(--ui-bg-soft);
 }
-.ssl-status-meta strong,
-.ssl-kpi-card strong {
+.ssl-info-card strong {
     display: block;
     margin-top: .25rem;
     color: var(--ui-text);
@@ -324,12 +356,7 @@ require_once 'header.php';
     font-weight: 900;
     overflow-wrap: anywhere;
 }
-.ssl-kpi-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    padding: var(--ui-space-6);
-    border-bottom: 1px solid var(--ui-border);
-}
-.ssl-kpi-card small {
+.ssl-info-card small {
     display: block;
     margin-top: .35rem;
     color: var(--ui-text-muted);
@@ -337,7 +364,6 @@ require_once 'header.php';
 }
 .ssl-report-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
     gap: var(--ui-space-4);
     padding: var(--ui-space-6);
 }
@@ -387,25 +413,14 @@ require_once 'header.php';
     font-size: var(--ui-text-sm);
     flex-wrap: wrap;
 }
-.ssl-domain-cloud,
 .ssl-link-list,
 .ssl-fingerprint-list,
 .ssl-chain-timeline {
     display: grid;
     gap: var(--ui-space-3);
 }
-.ssl-domain-cloud {
-    display: flex;
-    flex-wrap: wrap;
-}
 .ssl-domain-pill {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
     padding: .38rem .65rem;
-    border: 1px solid var(--ui-border);
-    border-radius: var(--ui-radius-pill);
-    background: var(--ui-bg-soft);
     color: var(--ui-text);
     font-size: var(--ui-text-sm);
     overflow-wrap: anywhere;
@@ -484,23 +499,18 @@ require_once 'header.php';
     font-size: var(--ui-text-sm);
 }
 @media (max-width: 920px) {
-    .ssl-status-overview,
-    .ssl-status-meta,
-    .ssl-kpi-grid { grid-template-columns: 1fr 1fr; }
-    .ssl-status-score { grid-column: 1 / -1; }
+    .ssl-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ssl-status-banner { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 640px) {
-    .ssl-intel-page { gap: var(--ui-space-5); }
-    .ssl-scan-console,
-    .ssl-status-overview,
-    .ssl-kpi-grid,
+    .ssl-checker-page { gap: var(--ui-space-5); }
+    .ssl-search-card,
+    .ssl-status-banner,
+    .ssl-info-grid,
     .ssl-report-layout { padding: var(--ui-space-4); }
     .ssl-console-form,
-    .ssl-status-overview,
-    .ssl-status-meta,
-    .ssl-kpi-grid,
+    .ssl-info-grid,
     .ssl-share-control { grid-template-columns: 1fr; }
-    .ssl-status-score { grid-column: auto; }
     .ssl-console-header,
     .ssl-panel__header { align-items: flex-start; }
     .ssl-scan-button,
@@ -508,15 +518,15 @@ require_once 'header.php';
 }
 </style>
 
-<main class="wrap ssl-intel-page">
+<main class="wrap ssl-checker-page">
 
-  <section class="ssl-intel-hero">
-    <div class="ssl-hero-copy">
-      <span class="ssl-eyebrow">داشبورد هوشمند SSL</span>
+  <section class="ssl-page-header">
+    <div class="ssl-page-copy">
+      <span class="ssl-header-kicker">داشبورد هوشمند SSL</span>
       <h1>مرکز پایش و تحلیل امنیت SSL</h1>
       <p>دامنه را وارد کنید تا گزارشی دقیق از اعتبار گواهی، مسیر اعتماد Chain، پوشش SAN، Issuer، اثرانگشت‌ها و ریسک SSL دریافت کنید.</p>
 
-      <div class="ssl-hero-pills" aria-label="قابلیت‌های داشبورد">
+      <div class="ssl-header-tags" aria-label="قابلیت‌های داشبورد">
         <span>وارسی لحظه‌ای</span>
         <span>تحلیل Chain</span>
         <span>پوشش SAN</span>
@@ -525,7 +535,7 @@ require_once 'header.php';
     </div>
   </section>
 
-  <section class="ssl-scan-console">
+  <section class="ssl-search-card">
     <div class="ssl-console-header">
       <div>
         <span class="ssl-console-label">وارسی SSL</span>
@@ -576,10 +586,10 @@ require_once 'header.php';
       $key   = $result['key_info'];
     ?>
 
-      <section class="ssl-report-shell">
+      <section class="ssl-result-card">
 
-        <section class="ssl-status-overview" style="--status-color: <?= $s['color'] ?>">
-          <div class="ssl-status-score">
+        <section class="ssl-status-banner" style="--status-color: <?= $s['color'] ?>">
+          <div class="ssl-status-main">
             <div class="ssl-status-icon"><?= $s['icon'] ?></div>
             <div>
               <span>وضعیت کلی SSL</span>
@@ -587,45 +597,44 @@ require_once 'header.php';
             </div>
           </div>
 
-          <div class="ssl-status-meta">
-            <div>
-              <span>دامنه</span>
-              <strong class="ui-ltr">
-                <?= htmlspecialchars($result['domain']) ?><?php if ($result['port'] != 443): ?>:<?= $result['port'] ?><?php endif; ?>
-              </strong>
-            </div>
-            <div>
-              <span>Issuer</span>
-              <strong><?= $ca['logo'] ?> <?= htmlspecialchars($ca['name']) ?></strong>
-            </div>
-            <div>
-              <span>روز باقی‌مانده</span>
-              <strong><?= $result['days_left'] ?></strong>
-            </div>
+          <div class="ssl-status-domain ui-ltr">
+            <?= htmlspecialchars($result['domain']) ?><?php if ($result['port'] != 443): ?>:<?= $result['port'] ?><?php endif; ?> · Issuer: <?= htmlspecialchars($ca['name']) ?> · <?= $result['days_left'] ?> روز باقی‌مانده
           </div>
         </section>
 
-        <section class="ssl-kpi-grid">
-          <article class="ssl-kpi-card">
-            <span class="ssl-kpi-label">Common Name</span>
+        <?php if (!empty($types)): ?>
+        <section class="ssl-types-row" aria-label="نوع گواهی">
+          <?php foreach ($types as $type): ?>
+            <span class="ssl-type-chip">
+              <?= htmlspecialchars($type['icon'] ?? '') ?>
+              <strong><?= htmlspecialchars($type['type'] ?? '') ?></strong>
+              <small><?= htmlspecialchars($type['label'] ?? '') ?></small>
+            </span>
+          <?php endforeach; ?>
+        </section>
+        <?php endif; ?>
+
+        <section class="ssl-info-grid">
+          <article class="ssl-info-card">
+            <span class="ssl-info-label">Common Name</span>
             <strong class="ui-ltr"><?= htmlspecialchars($result['cn']) ?></strong>
             <small>هویت گواهی</small>
           </article>
 
-          <article class="ssl-kpi-card">
-            <span class="ssl-kpi-label">Issuer</span>
+          <article class="ssl-info-card">
+            <span class="ssl-info-label">Issuer</span>
             <strong><?= htmlspecialchars($result['issuer_o'] ?: $result['issuer_cn']) ?></strong>
             <small><?= htmlspecialchars($result['issuer_cn']) ?></small>
           </article>
 
-          <article class="ssl-kpi-card">
-            <span class="ssl-kpi-label">کلید</span>
+          <article class="ssl-info-card">
+            <span class="ssl-info-label">کلید</span>
             <strong class="ui-ltr"><?= $key['algo'] ?><?php if ($key['bits']): ?> / <?= $key['bits'] ?> bit<?php endif; ?></strong>
             <?php if ($key['sig']): ?><small class="ui-ltr"><?= $key['sig'] ?></small><?php endif; ?>
           </article>
 
-          <article class="ssl-kpi-card">
-            <span class="ssl-kpi-label">پوشش / Chain</span>
+          <article class="ssl-info-card">
+            <span class="ssl-info-label">پوشش / Chain</span>
             <strong><?= count($result['sans']) ?> SAN</strong>
             <small><?= $result['chain_count'] ?> گواهی در Chain</small>
           </article>
